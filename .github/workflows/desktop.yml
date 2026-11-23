@@ -1,0 +1,43 @@
+name: Build Desktop EXE
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'desktop/**', '.github/workflows/desktop.yml' ]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build
+        run: |
+          npm install --no-audit --no-fund 2>&1 | tee ../build-log.txt
+          npx electron-builder --win portable --x64 --publish never 2>&1 | tee -a ../build-log.txt
+          ls dist
+          test -f dist/radio-desktop-v*.exe
+      - name: Publish EXE to exe branch
+        if: success()
+        run: |
+          mkdir ../out && cp dist/radio-desktop-v*.exe ../out/
+          cd ../out && git init -q && git checkout -q -b exe
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          echo "build ${GITHUB_SHA}" > BUILD.txt
+          git add . && git commit -qm "Desktop EXE"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" exe
+      - name: Publish build log on failure
+        if: failure()
+        run: |
+          mkdir ../logout && cp ../build-log.txt ../logout/ || echo none > ../logout/build-log.txt
+          cd ../logout && git init -q && git checkout -q -b log-desktop
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          echo "build ${GITHUB_SHA}" > BUILD.txt
+          git add . && git commit -qm "log" && git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" log-desktop

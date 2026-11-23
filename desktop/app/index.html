@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src * blob: data:; connect-src * blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; worker-src blob:">
+<title>網路收音機</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stars"></div>
+<main id="content"></main>
+<div id="mini"></div>
+<nav id="nav"></nav>
+<div id="dialog"></div>
+<audio id="audio" preload="none"></audio>
+<script src="../node_modules/hls.js/dist/hls.light.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

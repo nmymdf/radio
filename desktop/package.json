@@ -1,0 +1,27 @@
+{
+  "name": "net-radio-desktop",
+  "productName": "網路收音機",
+  "version": "1.1.0",
+  "description": "網路收音機 電腦版",
+  "author": "ArchieKUO",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "hls.js": "1.7.4"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.archiekuo.radio.desktop",
+    "productName": "網路收音機",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "app/**/*", "build/icon.ico", "node_modules/hls.js/dist/hls.light.min.js"],
+    "win": { "icon": "build/icon.ico", "target": ["portable"] },
+    "portable": { "artifactName": "radio-desktop-v${version}.exe" }
+  }
+}
