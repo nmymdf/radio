@@ -24,15 +24,15 @@ jobs:
           npx electron-builder --win portable --x64 --publish never 2>&1 | tee -a ../build-log.txt
           ls dist
           test -f dist/radio-desktop-v*.exe
-      - name: Publish EXE to exe branch
+      - name: Publish EXE to release
         if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir ../out && cp dist/radio-desktop-v*.exe ../out/
-          cd ../out && git init -q && git checkout -q -b exe
-          git config user.name "github-actions" && git config user.email "actions@github.com"
-          echo "build ${GITHUB_SHA}" > BUILD.txt
-          git add . && git commit -qm "Desktop EXE"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" exe
+          ls -la dist/*.exe | tee -a ../build-log.txt
+          gh release delete desktop-latest -y --cleanup-tag 2>&1 | tee -a ../build-log.txt || true
+          gh release create desktop-latest dist/radio-desktop-v*.exe --title "網路收音機 電腦版" --notes "build ${GITHUB_SHA}" --target "${GITHUB_SHA}" 2>&1 | tee -a ../build-log.txt
+          test ${PIPESTATUS[0]} -eq 0
       - name: Publish build log on failure
         if: failure()
         run: |
