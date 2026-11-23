@@ -79,25 +79,14 @@ fun HomeScreen(
             CircleIconButton(Icons.Rounded.Settings, "設定", onSettings)
         }
 
-        // 主視覺：點一下就開始播放
-        Box(
-            Modifier
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 14.dp)
-                .fillMaxWidth()
-                .aspectRatio(808f / 486f)
-                .goldCard(RoundedCornerShape(20.dp))
-                .clickable(role = Role.Button, onClickLabel = "開始播放") {
-                    vm.playBanner()
-                    onOpenPlayer()
-                },
-        ) {
-            Image(
-                painterResource(R.drawable.art_banner),
-                contentDescription = "今晚，聽點好音樂。開始播放",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        // 主視覺輪播：點一下就開始播放
+        BannerCarousel(
+            onPlay = { b ->
+                vm.playBanner(b.categoryKey)
+                onOpenPlayer()
+            },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 14.dp),
+        )
 
         SectionHeader(Icons.Rounded.LocalFireDepartment, "熱門電台", onAllCategories)
         Row(

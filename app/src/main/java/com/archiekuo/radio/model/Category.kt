@@ -21,10 +21,10 @@ object Categories {
     )
     val music = listOf(
         Category("hot", "熱門推薦", emptyList(), R.drawable.art_radio, R.drawable.ic_cat_hot, 0xFF2B3672),
-        Category("world", "國際音樂", listOf("pop", "top 40", "hits"), R.drawable.art_pop, R.drawable.ic_cat_world, 0xFF243A70),
+        Category("world", "國際音樂", listOf("pop", "top 40", "hits"), R.drawable.art_sunset, R.drawable.ic_cat_world, 0xFF243A70),
         Category("rock", "搖滾音樂", listOf("rock", "classic rock"), R.drawable.art_jazz, R.drawable.ic_cat_rock, 0xFF3A2F70),
-        Category("love", "情歌浪漫", listOf("love songs", "romantic", "ballads"), R.drawable.art_pop, R.drawable.ic_cat_love, 0xFF4B2B6C),
-        Category("zen", "佛教音樂", listOf("buddhist", "buddhism", "meditation"), R.drawable.art_lake, R.drawable.ic_cat_zen, 0xFF2F396C),
+        Category("love", "情歌浪漫", listOf("love songs", "romantic", "ballads"), R.drawable.art_cafe, R.drawable.ic_cat_love, 0xFF4B2B6C),
+        Category("zen", "佛教音樂", listOf("buddhist", "buddhism", "meditation"), R.drawable.art_zen, R.drawable.ic_cat_zen, 0xFF2F396C),
         Category("nature", "自然放鬆", listOf("nature", "relax", "ambient"), R.drawable.art_lake, R.drawable.ic_cat_nature, 0xFF22406A),
     )
     val all = hotStations + music

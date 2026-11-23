@@ -77,15 +77,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun previous() = player.previous()
     fun setSleep(min: Int) = player.setSleep(min)
 
-    /** 首頁大圖的「開始播放」：接著播上次的電台，沒有就播熱門第一名 */
-    fun playBanner() {
+    /** 首頁大圖的「開始播放」：key 為空就接著播上次的電台（沒有就播熱門第一名），否則播該分類第一名 */
+    fun playBanner(key: String? = null) {
         val st = playerState.value
-        if (st.isPlaying) return
-        val s = st.station ?: store.lastStation
-        if (s != null) { player.play(s, currentListFor(s)); return }
+        if (key == null) {
+            if (st.isPlaying) return
+            val s = st.station ?: store.lastStation
+            if (s != null) { player.play(s, currentListFor(s)); return }
+        }
+        val k = key ?: "hot"
         viewModelScope.launch {
-            runCatching { repo.forCategory(Categories.byKey("hot")) }.getOrNull()?.let { l ->
-                _cats.update { it + ("hot" to Load.Ok(l)) }
+            runCatching { repo.forCategory(Categories.byKey(k)) }.getOrNull()?.let { l ->
+                _cats.update { it + (k to Load.Ok(l)) }
                 l.firstOrNull()?.let { player.play(it, l) }
             }
         }
