@@ -5,3 +5,6 @@ local.properties
 *.iml
 desktop/node_modules/
 desktop/dist/
+carhome/.gradle/
+carhome/build/
+carhome/app/build/

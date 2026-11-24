@@ -13,7 +13,11 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import android.os.Bundle
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import com.archiekuo.radio.MainActivity
+import com.archiekuo.radio.RadioApp
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 
@@ -69,6 +73,25 @@ class PlaybackService : MediaSessionService() {
         session = MediaSession.Builder(this, player)
             .setSessionActivity(open)
             .setCallback(object : MediaSession.Callback {
+                override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
+                    val r = super.onConnect(session, controller)
+                    val cmds = r.availableSessionCommands.buildUpon().add(SessionCommand(CMD_RESUME_LAST, Bundle.EMPTY)).build()
+                    return MediaSession.ConnectionResult.accept(cmds, r.availablePlayerCommands)
+                }
+
+                override fun onCustomCommand(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo,
+                    customCommand: SessionCommand,
+                    args: Bundle,
+                ): ListenableFuture<SessionResult> {
+                    if (customCommand.customAction == CMD_RESUME_LAST) {
+                        resumeLast(player)
+                        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
+                    return super.onCustomCommand(session, controller, customCommand, args)
+                }
+
                 override fun onAddMediaItems(
                     mediaSession: MediaSession,
                     controller: MediaSession.ControllerInfo,
@@ -84,6 +107,25 @@ class PlaybackService : MediaSessionService() {
                 }
             })
             .build()
+    }
+
+    /** 接著播上次的電台；上次的電台在收藏裡時，上一台／下一台就在收藏裡切換 */
+    private fun resumeLast(player: Player) {
+        if (player.isPlaying) return
+        if (player.mediaItemCount > 0) {
+            player.seekToDefaultPosition()
+            player.prepare()
+            player.play()
+            return
+        }
+        val store = (application as RadioApp).store
+        val last = store.lastStation ?: store.favorites.value.firstOrNull() ?: return
+        val favs = store.favorites.value
+        val list = if (favs.any { it.id == last.id }) favs else listOf(last)
+        val idx = list.indexOfFirst { it.id == last.id }.coerceAtLeast(0)
+        player.setMediaItems(list.map { it.toMediaItem(this) }, idx, 0L)
+        player.prepare()
+        player.play()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session

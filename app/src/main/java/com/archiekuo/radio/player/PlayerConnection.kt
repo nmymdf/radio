@@ -109,27 +109,6 @@ class PlayerConnection(private val ctx: Context, private val store: LocalStore) 
     private fun stationOf(item: MediaItem): Station? =
         item.mediaMetadata.extras?.getString("st")?.let { runCatching { stationFromJson(JSONObject(it)) }.getOrNull() }
 
-    private fun Station.toMediaItem(): MediaItem {
-        val cat = Categories.byKey(categoryKey)
-        val art = Uri.parse("android.resource://${ctx.packageName}/${cat.art}")
-        val extras = Bundle().apply {
-            putString("st", toJson().toString())
-            putBoolean("hls", hls)
-        }
-        val md = MediaMetadata.Builder()
-            .setTitle(name)
-            .setArtist(listOf(countryZh, languageZh).filter { it.isNotBlank() }.joinToString(" ・ ").ifBlank { "網路收音機 ・ ${cat.title}" })
-            .setArtworkUri(art)
-            .setExtras(extras)
-            .build()
-        return MediaItem.Builder()
-            .setMediaId(id)
-            .setUri(url)
-            .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(Uri.parse(url)).build())
-            .setMediaMetadata(md)
-            .build()
-    }
-
     private fun isWifi(): Boolean {
         val cm = ctx.getSystemService(ConnectivityManager::class.java) ?: return true
         val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
@@ -148,7 +127,7 @@ class PlayerConnection(private val ctx: Context, private val store: LocalStore) 
         _state.update { it.copy(station = station, error = null, buffering = true, nowPlaying = null) }
         store.lastStation = station
         withController { c ->
-            c.setMediaItems(l.map { it.toMediaItem() }, idx, 0L)
+            c.setMediaItems(l.map { it.toMediaItem(ctx) }, idx, 0L)
             c.prepare()
             c.play()
         }
