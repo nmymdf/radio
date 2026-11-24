@@ -1,11 +1,48 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 收音機 v1.4 車機版（建置後 3）
+# 測試 車機桌面 v0.4 全部新功能
 set -x
 OUT=results
 mkdir -p $OUT
 shot() { sleep ${2:-3}; adb exec-out screencap -p > $OUT/$1.png; echo "shot $1"; }
 tap() { adb shell input tap $1 $2; }
+hold() { adb shell input swipe $1 $2 $1 $2 ${3:-1300}; }
+home() { adb shell input keyevent 3; }
+back() { adb shell input keyevent 4; }
+
+# 找畫面上的文字並點它（$1＝文字，$2＝prefix 表示開頭符合即可）
+findText() {
+  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+  adb pull /sdcard/ui.xml /tmp/ui.xml >/dev/null 2>&1
+  python3 - "$1" "${2:-exact}" <<'PY'
+import re, sys
+t, mode = sys.argv[1], sys.argv[2]
+try: xml = open('/tmp/ui.xml', encoding='utf-8').read()
+except Exception: sys.exit(0)
+for m in re.finditer(r'<node [^>]*>', xml):
+    n = m.group(0)
+    vals = re.findall(r'(?:text|content-desc)="([^"]*)"', n)
+    ok = any(v == t for v in vals) if mode == 'exact' else any(v.startswith(t) for v in vals)
+    if ok:
+        b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', n)
+        if b:
+            x1, y1, x2, y2 = map(int, b.groups())
+            print((x1 + x2) // 2, (y1 + y2) // 2); break
+PY
+}
+tapText() {
+  local xy; xy=$(findText "$1" "$2")
+  if [ -n "$xy" ]; then tap $xy; echo "tapText OK: $1 @ $xy"; else echo "tapText MISSING: $1"; fi
+}
+# 在設定裡往下捲直到看到文字再點
+scrollTap() {
+  for i in 1 2 3 4 5 6; do
+    local xy; xy=$(findText "$1" "$2")
+    if [ -n "$xy" ]; then tap $xy; echo "scrollTap OK: $1"; return; fi
+    adb shell input swipe 640 600 640 260 500; sleep 1
+  done
+  echo "scrollTap MISSING: $1"
+}
 
 adb shell wm size 1280x720
 adb shell wm density 160
@@ -17,12 +54,15 @@ for p in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION RECORD_AUDIO READ_EXTERNAL_
   adb shell pm grant com.archiekuo.carhome android.permission.$p || true
 done
 adb shell appops set com.archiekuo.carhome SYSTEM_ALERT_WINDOW allow || true
+adb shell appops set com.archiekuo.carhome GET_USAGE_STATS allow || true
 adb shell cmd package set-home-activity com.archiekuo.carhome/.MainActivity || true
 
-# 準備一首測試歌（440Hz 提示音 + 節拍）給「內部音樂」
+# 準備兩首測試歌給「內部音樂」（不同資料夾）
 ffmpeg -loglevel error -f lavfi -i "sine=frequency=220:duration=90" -f lavfi -i "sine=frequency=880:duration=90" -filter_complex "[0][1]amix=inputs=2,volume=2" -metadata title="測試歌曲" -metadata artist="ArchieKUO" -b:a 128k test-song.mp3
-adb shell mkdir -p /sdcard/Music
+ffmpeg -loglevel error -f lavfi -i "sine=frequency=330:duration=80" -metadata title="第二首老歌" -metadata artist="測試歌手" -b:a 128k test-song2.mp3
+adb shell mkdir -p /sdcard/Music/台語老歌
 adb push test-song.mp3 /sdcard/Music/test-song.mp3
+adb push test-song2.mp3 /sdcard/Music/台語老歌/test-song2.mp3
 adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Music/test-song.mp3 || true
 
 # 新店的位置
@@ -32,94 +72,133 @@ adb logcat -c
 adb shell am start -n com.archiekuo.carhome/.MainActivity
 shot 01-首頁-剛打開 30
 adb emu geo fix 121.5419 24.9676
-shot 02-首頁-等天氣路名 20
+shot 02-首頁-等天氣路名 15
 
-# 模擬開車：沿北新路往北，時速約 55 公里（30 節）
+# 模擬開車再停車（讓指南針有方向）
 LAT=24.9676
-for i in $(seq 1 15); do
+for i in $(seq 1 12); do
   LAT=$(python3 -c "print(round($LAT+0.00015,6))")
   adb emu geo fix 121.5419 $LAT 20 8 30
   sleep 1
 done
 shot 03-行駛中 2
+for i in $(seq 1 12); do adb emu geo fix 121.5419 $LAT 20 8 0; sleep 1; done
 
-# 停車
-for i in $(seq 1 10); do adb emu geo fix 121.5419 $LAT 20 8 0; sleep 1; done
-shot 04-停車後 3
+# ---- 1. 圓圈三種顯示＋長按神盾 ----
+tap 200 224
+shot 04a-圓圈-大字時鐘 2
+tap 200 224
+shot 04b-圓圈-大字指南針 2
+tap 200 224
+shot 04c-圓圈-回到時鐘指南針 2
+hold 200 224
+shot 04d-長按圓圈-沒有神盾時選神盾 3
+back
 
-# 設定（下方第 5 個方塊）
-tap 819 618
-shot 05-設定 3
-adb shell input swipe 640 600 640 150 600
-shot 06-設定-往下 2
-adb shell input swipe 640 600 640 150 600
-shot 07-設定-最下面 2
-adb shell input keyevent 4
+# ---- 2. 詳細天氣 ----
+tap 200 467
+shot 05-詳細天氣 10
+back
 
-# 所有 App（第 6 個方塊）
-tap 998 618
-shot 08-所有App 4
-adb shell input keyevent 4
+# ---- 4. YouTube：點照片→全螢幕，返回→縮小繼續播，點畫面→全螢幕，首頁→縮小 ----
+tap 1060 364
+shot 06a-YouTube-點照片全螢幕 15
+back
+shot 06b-YouTube-返回縮小 4
+tap 1060 364
+shot 06c-YouTube-點畫面又全螢幕 4
+home
+shot 06d-YouTube-首頁鍵縮小 4
+tapText "關閉 YouTube"
+shot 06e-YouTube-關閉 3
 
-# 內部音樂：切換分頁、播放
+# ---- 5. 內部音樂全畫面選歌 ----
 tap 620 121
-shot 09-內部音樂 12
-tap 620 376
-shot 10-內部音樂-播放中 6
+sleep 10
+tap 492 234
+shot 07a-內部音樂-全畫面 4
+tapText "全部歌曲"
+shot 07b-全部歌曲 2
+tapText "第二首老歌"
+shot 07c-點歌播放 5
+tapText "最近播放"
+shot 07d-最近播放 2
+home
+shot 07e-首頁-歌繼續播 4
 
-# 長按導航方塊（第 3 個）→ 選 App 面板
-adb shell input swipe 461 618 461 618 1200
-shot 11-長按方塊-選App 3
-adb shell input keyevent 4
-
-# YouTube：平常是照片 → 點照片開啟 → 放大 → 縮小 → 關閉
-shot 12a-YouTube-平常照片 2
-tap 1046 370
-shot 12b-YouTube-開啟 12
-tap 954 502
-shot 12c-YouTube-放大 6
-tap 340 502
-sleep 2
-tap 1137 502
-shot 12d-YouTube-關閉回照片 3
-# 更換照片
-tap 954 502
-shot 12e-更換照片 3
-adb shell input keyevent 4
-# 導航四大按鈕（第 3 個方塊）
-tap 468 618
-shot 12f-導航選單 3
-adb shell input keyevent 4
-
-# 網路收音機 App（車機版橫式）
-adb shell am start -n com.archiekuo.radio/.MainActivity
-shot 13-收音機車機版-首頁 15
-# 點右邊第一個方塊（古典音樂）
-tap 743 160
-shot 13a-收音機車機版-分類 12
-adb shell input swipe 950 600 950 150 500
-sleep 2
-adb shell input swipe 950 600 950 250 500
-sleep 2
-tap 950 420
-shot 13b-收音機車機版-播放中 20
-tap 72 360
-shot 13c-收音機車機版-收藏頁 4
-tap 72 600
-shot 13d-收音機車機版-我的 4
-adb shell input keyevent 3
-sleep 3
-# 回到車機桌面，切到「網路收音機」分頁
+# ---- 網路收音機：點封面 → 車機版選台 ----
 tap 490 121
-shot 14-桌面控制收音機 15
-# 用桌面的暫停鍵
-tap 620 376
-shot 15-桌面暫停收音機 5
-tap 620 376
-shot 16-桌面再播放 12
+sleep 4
+tap 492 234
+shot 08a-點收音機封面-開收音機 12
+home
+shot 08b-回桌面 4
+
+# ---- 3. 所有 App：搜尋、長按選單、放到方塊 ----
+tap 998 618
+shot 09a-所有App 4
+tapText "搜尋 App"
+sleep 1
+adb shell input text "set"
+shot 09b-搜尋set 3
+hold 124 169
+shot 09c-長按選單 2
+tapText "放到下方方塊"
+shot 09d-選方塊 2
+tapText "第 7 個" prefix
+shot 09e-已放到方塊 2
+back
+shot 09f-桌面方塊換了 3
+
+# ---- 8. 設定：記憶體與背景 App、神盾放左邊 ----
+tap 819 618
+shot 10a-設定 3
+scrollTap "記憶體與背景 App"
+shot 10b-記憶體與背景App 6
+back
+sleep 1
+scrollTap "神盾和 YouTube 放左邊"
+shot 10c-設定-神盾放左邊 2
+back
+shot 11-桌面-神盾放左邊 4
+
+# ---- 7. 導航小卡（模擬高德送出的導航資訊）----
+( for i in $(seq 1 60); do
+    adb shell am broadcast -a AUTONAVI_STANDARD_BROADCAST_SEND --ei KEY_TYPE 10001 --ei ICON 3 --ei SEG_REMAIN_DIS $((400 - i * 5)) --es NEXT_ROAD_NAME "中正路" --ei ROUTE_REMAIN_DIS 12000 --ei ROUTE_REMAIN_TIME 1080 >/dev/null 2>&1
+    sleep 2
+  done ) &
+NAVLOOP=$!
+shot 12-導航中-導航小卡 6
+
+# ---- 6. 分割畫面導航（模擬器沒有高德，用「設定」App 代替導航）----
+adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_nav_pkg com.android.settings
+adb shell settings put secure enabled_accessibility_services com.archiekuo.carhome/com.archiekuo.carhome.split.SplitService
+adb shell settings put secure accessibility_enabled 1
+sleep 4
+tap 468 618
+shot 13a-導航選單-五個按鈕 3
+tapText "分割畫面"
+shot 13b-分割畫面-一半一半 14
+adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity|Stack #|windowingMode" | head -40 > $OUT/split-activity.txt || true
+# 拖分隔線到 1/3、2/3
+adb shell input swipe 640 360 430 360 900
+shot 13c-分割畫面-拖到1比2 5
+adb shell input swipe 430 360 850 360 900
+shot 13d-分割畫面-拖到2比1 5
+adb shell input swipe 850 360 640 360 900
+sleep 3
+# 金色浮動按鈕：分割 → 導航全畫面
+tap 54 630
+shot 13e-浮動按鈕-導航全畫面 6
+# 首頁鍵 → 回到分割
+home
+shot 13f-首頁鍵-回到分割 14
+tapText "結束分割"
+shot 13g-結束分割-回完整桌面 8
+kill $NAVLOOP 2>/dev/null
 
 # 記錄
 adb logcat -d -b crash > $OUT/crash-log.txt || true
-adb logcat -d | grep -E "AndroidRuntime|FATAL|carhome|archiekuo|chromium.*ERROR" | tail -400 > $OUT/app-log.txt || true
+adb logcat -d | grep -E "AndroidRuntime|FATAL|carhome|archiekuo|ActivityTaskManager.*split|Divider" | tail -400 > $OUT/app-log.txt || true
 adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > $OUT/activity.txt || true
 echo done
