@@ -10,7 +10,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-data class Song(val uri: Uri, val title: String, val artist: String, val path: String)
+data class Song(val uri: Uri, val title: String, val artist: String, val path: String) {
+    /** 播放清單裡用的編號（和 MediaItem 的 mediaId 一樣） */
+    val id: String get() = path.ifBlank { uri.toString() }
+    /** 所在資料夾 */
+    val folder: String get() = path.substringBeforeLast('/', "").ifBlank { "其他" }
+}
 
 /** 找出車機和隨身碟裡的歌曲 */
 object LocalLibrary {
@@ -46,7 +51,8 @@ object LocalLibrary {
         roots += listOf(File("/mnt/usb_storage"), File("/mnt/media_rw"), File("/udisk"), File("/mnt/udisk"))
         roots += runCatching { Environment.getExternalStorageDirectory() }.getOrNull()?.let { listOf(File(it, "Music"), File(it, "Download")) } ?: emptyList()
         roots.distinct().filter { it.exists() && it.canRead() }.forEach { walk(it, 0, out) }
-        out.values.toList()
+        // 同一個資料夾的歌排在一起，播完一首接著播同資料夾的下一首
+        out.values.sortedWith(compareBy({ it.folder.lowercase() }, { it.path.lowercase() }, { it.title }))
     }
 
     private fun walk(dir: File, depth: Int, out: LinkedHashMap<String, Song>) {

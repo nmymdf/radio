@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
-data class AppInfo(val pkg: String, val label: String, val component: ComponentName)
+data class AppInfo(val pkg: String, val label: String, val component: ComponentName, val system: Boolean = false)
 
 /** 車機上已安裝的 App */
 class AppsRepo(private val ctx: Context) {
@@ -26,7 +26,11 @@ class AppsRepo(private val ctx: Context) {
     suspend fun refresh() = withContext(Dispatchers.IO) {
         val list = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
             .filter { it.activityInfo.packageName != ctx.packageName }
-            .map { AppInfo(it.activityInfo.packageName, it.loadLabel(pm).toString().trim(), ComponentName(it.activityInfo.packageName, it.activityInfo.name)) }
+            .map {
+                val flags = it.activityInfo.applicationInfo.flags
+                val sys = flags and (android.content.pm.ApplicationInfo.FLAG_SYSTEM or android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+                AppInfo(it.activityInfo.packageName, it.loadLabel(pm).toString().trim(), ComponentName(it.activityInfo.packageName, it.activityInfo.name), sys)
+            }
             .distinctBy { it.pkg }
             .sortedBy { it.label }
         _apps.value = list

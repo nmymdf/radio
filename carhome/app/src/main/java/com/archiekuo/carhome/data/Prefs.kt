@@ -23,6 +23,27 @@ class Prefs(ctx: Context) {
         fun set(v: String) { f.value = v; p.edit().putString(key, v).apply() }
     }
 
+    inner class IntPref(private val key: String, def: Int) {
+        private val f = MutableStateFlow(p.getInt(key, def))
+        val flow: StateFlow<Int> = f.asStateFlow()
+        val value get() = f.value
+        fun set(v: Int) { f.value = v; p.edit().putInt(key, v).apply() }
+    }
+
+    /** 時鐘指南針圓：0＝時鐘＋指南針、1＝大字時鐘、2＝大字指南針 */
+    val circleMode = IntPref("circleMode", 0)
+    /** 神盾和 YouTube 放左邊（時鐘和天氣換到右邊） */
+    val shieldLeft = BoolPref("shieldLeft", false)
+    /** 內部音樂最近播放（路徑，用換行分隔，最新的在前面） */
+    val recentSongs = StrPref("recentSongs", "")
+    /** 浮動按鈕位置（-1＝預設左下角） */
+    var floatX: Int
+        get() = p.getInt("floatX", -1)
+        set(v) { p.edit().putInt("floatX", v).apply() }
+    var floatY: Int
+        get() = p.getInt("floatY", -1)
+        set(v) { p.edit().putInt("floatY", v).apply() }
+
     /** 發動後自動播網路收音機 */
     val autoRadio = BoolPref("autoRadio", true)
     /** 發動後自動開神盾 */

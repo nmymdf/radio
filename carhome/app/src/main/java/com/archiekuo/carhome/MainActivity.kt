@@ -31,6 +31,7 @@ import androidx.lifecycle.lifecycleScope
 import com.archiekuo.carhome.ui.CarTheme
 import com.archiekuo.carhome.ui.Look
 import com.archiekuo.carhome.ui.HomeScreen
+import com.archiekuo.carhome.ui.CompactDesk
 import com.archiekuo.carhome.ui.createYouTubeWebView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -70,17 +71,28 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch { app.prefs.hideStatus.flow.collectLatest { applyBars(it) } }
 
         if (neededPermissions().any { !granted(it) }) askPermissions() else onPermissionsResult()
+        handleTestIntent(intent)
 
         setContent {
             CarTheme {
                 // 依螢幕大小等比縮放：照 1280×720 設計，任何尺寸的車機都能完整顯示
                 val cfg = LocalConfiguration.current
-                val scale = minOf(cfg.screenWidthDp / 1280f, cfg.screenHeightDp / 720f)
                 val d = LocalDensity.current
+                val aspect = cfg.screenWidthDp.toFloat() / cfg.screenHeightDp.coerceAtLeast(1)
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
-                        Box(Modifier.requiredSize(1280.dp, 720.dp)) {
-                            HomeScreen(app, w, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
+                    if (aspect >= 1.5f) {
+                        val scale = minOf(cfg.screenWidthDp / 1280f, cfg.screenHeightDp / 720f)
+                        CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
+                            Box(Modifier.requiredSize(1280.dp, 720.dp)) {
+                                HomeScreen(app, w, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
+                            }
+                        }
+                    } else {
+                        // 桌面本身被分割成窄的（有些車機會這樣）：改用精簡桌面
+                        val scale = (cfg.screenHeightDp / 720f).coerceAtLeast(0.3f)
+                        val designW = (cfg.screenWidthDp / scale).coerceAtLeast(300f)
+                        CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
+                            Box(Modifier.requiredSize(designW.dp, 720.dp)) { CompactDesk(app, designW) {} }
                         }
                     }
                 }
@@ -143,7 +155,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) homeTick++
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+            homeTick++
+            // 用分割畫面導航時，按首頁鍵回到「導航＋桌面」
+            app.restoreSplit()
+        }
+        handleTestIntent(intent)
+    }
+
+    /** 雲端模擬車機測試用：指定導航 App（模擬器上沒有高德） */
+    private fun handleTestIntent(i: Intent?) {
+        val pkg = i?.getStringExtra("test_nav_pkg") ?: return
+        if (pkg.matches(Regex("[A-Za-z0-9_.]+"))) app.prefs.tile(2).set(pkg)
     }
 
     override fun onResume() {

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">車機桌面</string>
+    <string name="split_label">車機桌面：分割畫面導航</string>
+    <string name="split_desc">讓「車機桌面」可以一鍵切換導航的全畫面／分割畫面，並在導航畫面顯示金色浮動按鈕。不會讀取或保存你在其他 App 裡的內容。</string>
 </resources>

@@ -29,6 +29,7 @@ data class LocalState(
     val index: Int = 0,
     val shuffle: Boolean = false,
     val uri: android.net.Uri? = null,
+    val id: String? = null,
 )
 
 /** 內部音樂：掃描歌曲、播放、記住上次聽到哪 */
@@ -41,16 +42,34 @@ class LocalMusicRemote(private val ctx: Context, private val prefs: Prefs) {
     private var loaded = false
     private val _state = MutableStateFlow(LocalState(shuffle = prefs.localShuffle))
     val state: StateFlow<LocalState> = _state.asStateFlow()
+    private val _library = MutableStateFlow<List<Song>>(emptyList())
+    /** 全部歌曲（同資料夾排在一起） */
+    val library: StateFlow<List<Song>> = _library.asStateFlow()
+    private val _recent = MutableStateFlow(prefs.recentSongs.value.split('\n').filter { it.isNotBlank() })
+    /** 最近播放的歌（id，最新的在前面） */
+    val recent: StateFlow<List<String>> = _recent.asStateFlow()
+    private var lastRecorded: String? = null
+
+    private fun record(id: String) {
+        if (id == lastRecorded) return
+        lastRecorded = id
+        val list = (listOf(id) + _recent.value.filter { it != id }).take(40)
+        _recent.value = list
+        prefs.recentSongs.set(list.joinToString("\n"))
+    }
 
     val audioSessionId: Int get() = 0
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
-            val md = player.currentMediaItem?.mediaMetadata
+            val item = player.currentMediaItem
+            val md = item?.mediaMetadata
             _state.update {
                 it.copy(playing = player.isPlaying, title = md?.title?.toString(), artist = md?.artist?.toString(),
-                    index = player.currentMediaItemIndex, uri = player.currentMediaItem?.localConfiguration?.uri)
+                    index = player.currentMediaItemIndex, uri = item?.localConfiguration?.uri, id = item?.mediaId)
             }
+            val id = item?.mediaId
+            if (player.isPlaying && !id.isNullOrBlank()) record(id)
             if (player.mediaItemCount > 0) prefs.localIndex = player.currentMediaItemIndex
         }
     }
@@ -88,6 +107,7 @@ class LocalMusicRemote(private val ctx: Context, private val prefs: Prefs) {
         _state.update { it.copy(scanning = true) }
         scope.launch {
             songs = runCatching { LocalLibrary.scan(ctx) }.getOrDefault(emptyList())
+            _library.value = songs
             loaded = false
             _state.update { it.copy(scanning = false, scanned = true, count = songs.size) }
             then?.invoke()
@@ -97,7 +117,7 @@ class LocalMusicRemote(private val ctx: Context, private val prefs: Prefs) {
     private fun load(c: MediaController) {
         if (loaded) return
         val items = songs.map { s ->
-            MediaItem.Builder().setUri(s.uri).setMediaId(s.path.ifBlank { s.uri.toString() })
+            MediaItem.Builder().setUri(s.uri).setMediaId(s.id)
                 .setMediaMetadata(MediaMetadata.Builder().setTitle(s.title).setArtist(s.artist).build()).build()
         }
         val idx = prefs.localIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
@@ -111,6 +131,19 @@ class LocalMusicRemote(private val ctx: Context, private val prefs: Prefs) {
         if (!_state.value.scanned) { rescan { play() }; return }
         if (songs.isEmpty()) return
         with { c -> load(c); c.play() }
+    }
+
+    /** 從清單點一首歌：播放那首，之後接著播下一首 */
+    fun playSong(id: String) {
+        val i = songs.indexOfFirst { it.id == id }
+        if (i < 0) return
+        with { c ->
+            load(c)
+            if (c.mediaItemCount != songs.size) { loaded = false; load(c) }
+            c.seekTo(i, 0L)
+            c.prepare()
+            c.play()
+        }
     }
 
     fun toggle() { if (_state.value.playing) pause() else play() }

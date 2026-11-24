@@ -109,7 +109,8 @@ fun YouTubePanel(
 ) {
     val hideVideo = active && driving && restricted && !passenger
     Column(
-        modifier.card(RoundedCornerShape(24.dp), if (full) SolidColor(panelColor()) else cardBrush()).padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier.card(RoundedCornerShape(if (full) 0.dp else 24.dp), if (full) SolidColor(panelColor()) else cardBrush())
+            .padding(horizontal = if (full) 24.dp else 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -130,8 +131,9 @@ fun YouTubePanel(
             val (txt, col) = when {
                 !active -> "點一下開啟" to C.Sub
                 hideVideo -> "行駛中 ・ 只播聲音" to C.Gold
+                full -> "按「首頁」或「返回」縮回小畫面" to C.GreenText
                 driving && passenger -> "副駕駛觀看中" to Color(0xFFFFB27A)
-                else -> "停車中" to C.GreenText
+                else -> "點畫面放大" to C.GreenText
             }
             Box(Modifier.clip(RoundedCornerShape(12.dp)).border(1.dp, col.copy(alpha = 0.5f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 2.dp)) {
                 Text(txt, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = col, maxLines = 1)
@@ -148,10 +150,14 @@ fun YouTubePanel(
                             Icon(Icons.Rounded.PlayArrow, "開啟 YouTube", tint = C.Gold, modifier = Modifier.size(40.dp))
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("點一下開始看 YouTube", style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White, shadow = Shadow(Color.Black, blurRadius = 10f)))
+                        Text("點一下全畫面播放", style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White, shadow = Shadow(Color.Black, blurRadius = 10f)))
                     }
                 }
-            } else if (hideVideo) {
+            } else if (!full && !hideVideo) {
+                // 小畫面播放中：點畫面任何地方 → 全螢幕（播放內容不變）
+                Box(Modifier.fillMaxSize().clickable(onClick = onFull))
+            }
+            if (active && hideVideo) {
                 Column(Modifier.fillMaxSize().background(if (Look.black) Color(0xF5000000) else Color(0xF2070C26)), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Icon(Icons.Rounded.DirectionsCar, null, tint = C.Gold, modifier = Modifier.size(56.dp))
                     Text("行駛中，只播聲音", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 8.dp))
@@ -165,8 +171,7 @@ fun YouTubePanel(
                 GhostButton("打開 YouTube", Modifier.weight(1f), onClick = onOpenApp)
             } else {
                 if (hideVideo) GhostButton("副駕駛觀看", Modifier.weight(1f), Icons.Rounded.Visibility, onClick = onPassenger)
-                else GhostButton(if (full) "縮小" else "放大", Modifier.weight(1f), if (full) Icons.Rounded.CloseFullscreen else Icons.Rounded.OpenInFull, onClick = onFull)
-                GhostButton("關閉", Modifier.weight(1f), Icons.Rounded.Close, onClick = onClose)
+                GhostButton("關閉 YouTube", Modifier.weight(1f), Icons.Rounded.Close, onClick = onClose)
             }
         }
     }

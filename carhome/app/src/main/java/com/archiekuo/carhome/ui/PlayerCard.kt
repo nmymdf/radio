@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -91,7 +92,7 @@ fun PlayerCard(
     onMode: (String) -> Unit,
     onRadioToggle: () -> Unit, onRadioPrev: () -> Unit, onRadioNext: () -> Unit, onOpenRadioApp: () -> Unit,
     onLocalToggle: () -> Unit, onLocalPrev: () -> Unit, onLocalNext: () -> Unit, onShuffle: () -> Unit, onRescan: () -> Unit,
-    onOpenFm: () -> Unit, onPickFm: () -> Unit,
+    onOpenFm: () -> Unit, onPickFm: () -> Unit, onLocalPage: () -> Unit = {},
 ) {
     Column(Modifier.width(440.dp).fillMaxHeight().card(RoundedCornerShape(24.dp)).padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -100,7 +101,7 @@ fun PlayerCard(
             Pill("FM 收音機", mode == "fm", Modifier.weight(1f)) { onMode("fm") }
         }
         when (mode) {
-            "local" -> LocalBody(local, onLocalToggle, onLocalPrev, onLocalNext, onShuffle, onRescan)
+            "local" -> LocalBody(local, onLocalToggle, onLocalPrev, onLocalNext, onShuffle, onRescan, onLocalPage)
             "fm" -> FmBody(fmLabel, autoFm, onOpenFm, onPickFm)
             else -> RadioBody(radio, onRadioToggle, onRadioPrev, onRadioNext, onOpenRadioApp, autoFm)
         }
@@ -118,7 +119,8 @@ private fun ColumnScope.RadioBody(s: RadioState, onToggle: () -> Unit, onPrev: (
         return
     }
     val art = rememberArt(s.artwork, false)
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+    // 點封面或台名 → 打開網路收音機（車機版全畫面）選台
+    Row(Modifier.clip(RoundedCornerShape(20.dp)).clickable(onClick = onOpenApp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Cover(art, R.drawable.art_radio)
         Column(Modifier.weight(1f)) {
             Text(s.title ?: "網路收音機", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 38.sp)
@@ -140,7 +142,7 @@ private fun ColumnScope.RadioBody(s: RadioState, onToggle: () -> Unit, onPrev: (
 }
 
 @Composable
-private fun ColumnScope.LocalBody(s: LocalState, onToggle: () -> Unit, onPrev: () -> Unit, onNext: () -> Unit, onShuffle: () -> Unit, onRescan: () -> Unit) {
+private fun ColumnScope.LocalBody(s: LocalState, onToggle: () -> Unit, onPrev: () -> Unit, onNext: () -> Unit, onShuffle: () -> Unit, onRescan: () -> Unit, onPage: () -> Unit) {
     if (s.scanning) {
         Column(Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(Icons.Rounded.LibraryMusic, null, tint = C.Gold, modifier = Modifier.size(72.dp))
@@ -158,7 +160,8 @@ private fun ColumnScope.LocalBody(s: LocalState, onToggle: () -> Unit, onPrev: (
         return
     }
     val art = rememberArt(s.uri, true)
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+    // 點封面或歌名 → 全畫面選歌
+    Row(Modifier.clip(RoundedCornerShape(20.dp)).clickable(onClick = onPage), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Cover(art, R.drawable.art_cafe)
         Column(Modifier.weight(1f)) {
             Text(s.title ?: "內部音樂", fontSize = 29.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 36.sp)
@@ -170,14 +173,14 @@ private fun ColumnScope.LocalBody(s: LocalState, onToggle: () -> Unit, onPrev: (
     Controls(s.playing, onPrev, onToggle, onNext)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         GhostButton(if (s.shuffle) "隨機播放：開" else "依序播放", icon = if (s.shuffle) Icons.Rounded.Shuffle else Icons.Rounded.Repeat, modifier = Modifier.weight(1f), onClick = onShuffle)
-        GhostButton("重新尋找歌曲", icon = Icons.Rounded.Refresh, modifier = Modifier.weight(1f), onClick = onRescan)
+        GhostButton("選歌", icon = Icons.Rounded.QueueMusic, modifier = Modifier.weight(1f), onClick = onPage)
     }
 }
 
 @Composable
 private fun ColumnScope.FmBody(fmLabel: String?, autoFm: Boolean, onOpen: () -> Unit, onPick: () -> Unit) {
     Column(Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Rounded.Radio, null, tint = C.Gold, modifier = Modifier.size(88.dp))
+        Icon(Icons.Rounded.Radio, null, tint = C.Gold, modifier = Modifier.size(88.dp).clip(CircleShape).clickable { if (fmLabel == null) onPick() else onOpen() })
         Text(fmLabel ?: "還沒選擇 FM 收音機 App", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
         Text("FM 用車機原廠的收音機播放，不需要網路", fontSize = 18.sp, color = C.Sub, modifier = Modifier.padding(top = 6.dp))
         Spacer(Modifier.height(22.dp))
