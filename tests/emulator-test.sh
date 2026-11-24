@@ -1,6 +1,6 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 車機桌面 v0.4 全部新功能
+# 測試 車機桌面 v0.5
 set -x
 OUT=results
 mkdir -p $OUT
@@ -93,131 +93,98 @@ done
 shot 03-行駛中 2
 for i in $(seq 1 12); do adb emu geo fix 121.5419 $LAT 20 8 0; sleep 1; done
 
-# ---- 1. 圓圈三種顯示＋長按神盾 ----
-tap 200 224
-shot 04a-圓圈-大字時鐘 2
-tap 200 224
-shot 04b-圓圈-大字指南針 2
-tap 200 224
-shot 04c-圓圈-回到時鐘指南針 2
-hold 200 224
-shot 04d-長按圓圈-沒有神盾時選神盾 3
-back
+# ---- 右上角：沒在導航＝三個大按鈕 ----
+shot 04-右上角三個大按鈕 2
 
-# ---- 2. 詳細天氣 ----
+# ---- 圓圈三種顯示 ----
+tap 200 224
+shot 05a-圓圈-大字時鐘 2
+tap 200 224
+tap 200 224
+sleep 1
+
+# ---- 詳細天氣 ----
 tap 200 467
-shot 05-詳細天氣 10
+shot 06-詳細天氣 8
 back
 
-# ---- 4. YouTube：點照片→全螢幕，返回→縮小繼續播，點畫面→全螢幕，首頁→縮小 ----
-tap 1060 364
-shot 06a-YouTube-點照片全螢幕 15
-back
-shot 06b-YouTube-返回縮小 4
-tap 1060 364
-shot 06c-YouTube-點畫面又全螢幕 4
+# ---- YouTube：點照片 → 打開 YouTube App ----
+tap 1060 380
+shot 07a-點YouTube-打開App 10
+adb shell dumpsys activity activities | grep -E "mResumedActivity" > $OUT/youtube-activity.txt || true
 home
-shot 06d-YouTube-首頁鍵縮小 4
-tapText "關閉 YouTube"
-shot 06e-YouTube-關閉 3
+shot 07b-首頁回桌面 4
 
-# ---- 5. 內部音樂全畫面選歌 ----
+# ---- 全黑 → 午夜藍（之前會閃） ----
+tap 819 618
+sleep 2
+scrollTap "全黑桌面"
+sleep 1
+back
+shot 08a-全黑桌面 3
+tap 819 618
+sleep 2
+scrollTap "全黑桌面"
+sleep 1
+back
+shot 08b-切回午夜藍 2
+shot 08c-切回午夜藍-2秒後 2
+shot 08d-切回午夜藍-4秒後 2
+
+# ---- 內部音樂 ----
 tap 620 121
 sleep 10
 tap 492 234
-shot 07a-內部音樂-全畫面 4
-tapText "全部歌曲"
-shot 07b-全部歌曲 2
+shot 09a-內部音樂-全畫面 4
 tapText "test-song2"
-shot 07c-點歌播放 5
-tapText "最近播放"
-shot 07d-最近播放 2
+shot 09b-點歌播放 4
 home
-shot 07e-首頁-歌繼續播 4
+shot 09c-首頁-歌繼續播 4
 
-# ---- 網路收音機：點封面 → 車機版選台 ----
-tap 490 121
-sleep 4
-tap 492 234
-shot 08a-點收音機封面-開收音機 12
-home
-shot 08b-回桌面 4
-
-# ---- 3. 所有 App：搜尋、長按選單、放到方塊 ----
+# ---- 所有 App ----
 tap 998 618
-shot 09a-所有App 4
+shot 10a-所有App 4
 tap 850 61
 sleep 1
-adb shell input text "set"
-shot 09b-搜尋set 3
+adb shell input text "you"
+shot 10b-搜尋you 3
 hold 124 169
-shot 09c-長按選單 2
-tapText "放到下方方塊"
-shot 09d-選方塊 2
-tapText "第 7 個" prefix
-shot 09e-已放到方塊 2
-hold 124 169
-shot 09g-系統App選單 2
-tapText "App 資訊"
-shot 09h-App資訊 4
-back
-sleep 2
-back
-shot 09f-桌面方塊換了 3
-
-# ---- 8. 設定：記憶體與背景 App、神盾放左邊 ----
-tap 819 618
-shot 10a-設定 3
-scrollTap "記憶體與背景 App"
-shot 10b-記憶體與背景App 6
+shot 10c-長按選單 2
 back
 sleep 1
-scrollTap "神盾和 YouTube 放左邊"
-shot 10c-設定-神盾放左邊 2
 back
-shot 11-桌面-神盾放左邊 4
 
-# ---- 7. 導航小卡（模擬高德送出的導航資訊）----
-( for i in $(seq 1 60); do
+# ---- 設定、記憶體 ----
+tap 819 618
+shot 11a-設定 3
+scrollTap "記憶體與背景 App"
+shot 11b-記憶體與背景App 5
+back
+sleep 1
+back
+
+# ---- 導航中：右上角換成導航小卡 ----
+( for i in $(seq 1 40); do
     adb shell am broadcast -a AUTONAVI_STANDARD_BROADCAST_SEND --ei KEY_TYPE 10001 --ei ICON 3 --ei SEG_REMAIN_DIS $((400 - i * 5)) --es NEXT_ROAD_NAME "中正路" --ei ROUTE_REMAIN_DIS 12000 --ei ROUTE_REMAIN_TIME 1080 >/dev/null 2>&1
     sleep 2
   done ) &
 NAVLOOP=$!
-shot 12-導航中-導航小卡 6
-
-# ---- 6. 分割畫面導航（模擬器沒有高德，用「設定」App 代替導航）----
-adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_nav_pkg com.android.settings
-adb shell settings put secure enabled_accessibility_services com.archiekuo.carhome/com.archiekuo.carhome.split.SplitService
-adb shell settings put secure accessibility_enabled 1
-sleep 4
+shot 12a-導航中-右上角導航小卡 6
+# 導航區放左邊
+tap 819 618
+sleep 2
+scrollTap "導航區和 YouTube 放左邊"
+sleep 1
+back
+shot 12b-導航區放左邊 3
 tap 468 618
-shot 13a-導航選單-五個按鈕 3
-tapText "分割畫面"
-sleep 14
-dragDiv 640
-shot 13b-分割畫面-一半一半 6
-adb shell dumpsys activity activities | grep -E "Stack #|mResumedActivity" > $OUT/split-activity.txt || true
-dragDiv 427
-shot 13c-分割畫面-桌面三分之一 6
-dragDiv 853
-shot 13d-分割畫面-桌面三分之二 6
-dragDiv 640
-sleep 3
-# 金色浮動按鈕：分割 → 導航全畫面
-XY=$(floatXY); echo "float at $XY"
-[ -n "$XY" ] && tap $XY
-shot 13e-浮動按鈕-導航全畫面 6
-# 首頁鍵 → 回到分割
-home
-sleep 14
-dragDiv 640
-shot 13f-首頁鍵-回到分割 6
-tapText "結束分割"
-shot 13g-結束分割-回完整桌面 8
+shot 13-導航選單-四個按鈕 3
+back
 kill $NAVLOOP 2>/dev/null
+sleep 25
+shot 14-導航結束-回到三個大按鈕 2
 
 # 記錄
 adb logcat -d -b crash > $OUT/crash-log.txt || true
-adb logcat -d | grep -E "AndroidRuntime|FATAL|carhome|archiekuo|CarHome|ActivityTaskManager.*split|Divider" | tail -400 > $OUT/app-log.txt || true
-adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > $OUT/activity.txt || true
+adb logcat -d | grep -E "AndroidRuntime|FATAL|CarHome" | tail -300 > $OUT/app-log.txt || true
 echo done
