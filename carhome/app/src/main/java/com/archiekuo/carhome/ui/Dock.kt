@@ -40,7 +40,7 @@ fun Dock(tiles: List<TileUi>, onTap: (Int) -> Unit, onLong: (Int) -> Unit) {
         tiles.forEachIndexed { i, t ->
             Column(
                 Modifier.weight(1f).fillMaxHeight()
-                    .card(RoundedCornerShape(20.dp), Brush.verticalGradient(listOf(Color(0x8C1C2558), Color(0x8C0E163E))))
+                    .card(RoundedCornerShape(20.dp), tileBrush())
                     .clickAndHold(onClick = { onTap(i) }, onLong = { onLong(i) }),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
             ) {

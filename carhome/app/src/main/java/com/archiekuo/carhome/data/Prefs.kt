@@ -37,6 +37,8 @@ class Prefs(ctx: Context) {
     val viz = BoolPref("viz", true)
     /** 光條流動速度跟著節奏 */
     val vizTempo = BoolPref("vizTempo", true)
+    /** 全黑桌面 */
+    val black = BoolPref("black", false)
     /** 隱藏系統狀態列 */
     val hideStatus = BoolPref("hideStatus", true)
     /** 播放卡目前的模式：radio、local、fm */

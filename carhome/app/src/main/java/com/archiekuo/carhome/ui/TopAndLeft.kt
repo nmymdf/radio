@@ -79,7 +79,7 @@ fun ClockCompass(now: Long, heading: Float?) {
         Canvas(Modifier.fillMaxSize()) {
             val r = size.minDimension / 2f
             val c = Offset(size.width / 2f, size.height / 2f)
-            drawCircle(Color(0xBF0A1030), r - 2.dp.toPx(), c)
+            drawCircle(if (Look.black) Color(0xE6050505) else Color(0xBF0A1030), r - 2.dp.toPx(), c)
             drawCircle(C.Gold.copy(alpha = 0.7f), r - 2.dp.toPx(), c, style = Stroke(2.dp.toPx()))
             drawCircle(C.Gold.copy(alpha = 0.25f), r * 0.64f, c, style = Stroke(1.dp.toPx()))
             for (d in 0 until 360 step 10) {

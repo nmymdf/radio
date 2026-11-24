@@ -66,6 +66,8 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
     val autoRadio by p.autoRadio.flow.collectAsStateWithLifecycle()
     val autoShield by p.autoShield.flow.collectAsStateWithLifecycle()
     val hideStatus by p.hideStatus.flow.collectAsStateWithLifecycle()
+    val black by p.black.flow.collectAsStateWithLifecycle()
+    Look.black = black
     val shieldPkg by p.shieldPkg.flow.collectAsStateWithLifecycle()
     val fmPkg by p.fmPkg.flow.collectAsStateWithLifecycle()
     val tilePkgs = (0 until 7).map { i -> p.tile(i).flow.collectAsStateWithLifecycle().value }
@@ -130,6 +132,10 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
     val active = radio.playing || local.playing
     Box(
         Modifier.fillMaxSize().drawBehind {
+            if (black) {
+                drawRect(Color.Black)
+                return@drawBehind
+            }
             drawRect(Brush.verticalGradient(listOf(C.Navy2, C.Navy1, C.Navy0)))
             drawRect(Brush.radialGradient(listOf(C.Glow, Color.Transparent), center = Offset(size.width / 2f, 0f), radius = size.width * 0.7f))
             val r = Random(7)
@@ -203,12 +209,12 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
                 SettingsModel(
                     autoRadio, autoShield, shieldApp()?.label ?: (if (shieldPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
                     autoFm, fmApp()?.label ?: (if (fmPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
-                    ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio,
+                    ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
                 ),
                 onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield },
                 onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,
                 onViz = { v -> p.viz.set(v); if (v) app.viz.start() else app.viz.stop() }, onVizTempo = p.vizTempo::set,
-                onHideStatus = p.hideStatus::set,
+                onHideStatus = p.hideStatus::set, onBlack = p.black::set,
                 onOverlay = { runCatching { ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } },
                 onPermissions = onAskPermissions,
                 onDefaultHome = { runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } },

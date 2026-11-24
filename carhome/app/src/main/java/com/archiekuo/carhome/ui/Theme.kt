@@ -50,14 +50,21 @@ object C {
 
 val GoldTextBrush = Brush.verticalGradient(listOf(Color(0xFFFFF3C8), C.Gold, Color(0xFFC58C2C)))
 val GoldBrush = Brush.verticalGradient(listOf(C.GoldLight, Color(0xFFE8B65C), C.GoldDark))
-val CardBrush = Brush.verticalGradient(listOf(Color(0xEB202A60), Color(0xEB141C48)))
+/** 桌面顏色：false＝午夜藍、true＝全黑 */
+object Look { var black by androidx.compose.runtime.mutableStateOf(false) }
+
+val NavyCard = Brush.verticalGradient(listOf(Color(0xEB202A60), Color(0xEB141C48)))
+val BlackCard = Brush.verticalGradient(listOf(Color(0xF0161616), Color(0xF00A0A0A)))
+fun cardBrush(): Brush = if (Look.black) BlackCard else NavyCard
+fun tileBrush(): Brush = if (Look.black) Brush.verticalGradient(listOf(Color(0x99181818), Color(0x990A0A0A))) else Brush.verticalGradient(listOf(Color(0x8C1C2558), Color(0x8C0E163E)))
+fun panelColor(): Color = if (Look.black) Color(0xF7000000) else Color(0xF5070C26)
 
 @Composable
 fun CarTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = darkColorScheme(primary = C.Gold, onPrimary = C.Ink, background = C.Navy0, surface = Color(0xFF1C2558), onSurface = Color.White), content = content)
 }
 
-fun Modifier.card(shape: Shape = RoundedCornerShape(22.dp), brush: Brush = CardBrush, alpha: Float = 0.38f): Modifier =
+fun Modifier.card(shape: Shape = RoundedCornerShape(22.dp), brush: Brush = cardBrush(), alpha: Float = 0.38f): Modifier =
     this.shadow(10.dp, shape, ambientColor = Color.Black, spotColor = Color.Black).clip(shape).background(brush).border(1.dp, C.Gold.copy(alpha = alpha), shape)
 
 @Composable
@@ -69,7 +76,7 @@ fun GoldText(text: String, size: TextUnit, modifier: Modifier = Modifier, italic
 @Composable
 fun CircleBtn(icon: ImageVector, desc: String, size: Dp, iconSize: Dp, onClick: () -> Unit, tint: Color = Color.White) {
     Box(
-        Modifier.size(size).clip(CircleShape).background(Color(0x99080E2C)).border(1.5.dp, C.Gold.copy(alpha = 0.6f), CircleShape)
+        Modifier.size(size).clip(CircleShape).background(if (Look.black) Color(0xCC111111) else Color(0x99080E2C)).border(1.5.dp, C.Gold.copy(alpha = 0.6f), CircleShape)
             .clickable(role = Role.Button, onClickLabel = desc, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, desc, tint = tint, modifier = Modifier.size(iconSize)) }
@@ -79,7 +86,7 @@ fun CircleBtn(icon: ImageVector, desc: String, size: Dp, iconSize: Dp, onClick: 
 fun PlayRing(playing: Boolean, size: Dp, onClick: () -> Unit) {
     Box(
         Modifier.size(size).shadow(size / 4, CircleShape, ambientColor = C.Gold, spotColor = C.Gold).clip(CircleShape)
-            .background(Color(0xE6080C24)).border(3.dp, C.Gold, CircleShape).clickable(role = Role.Button, onClick = onClick),
+            .background(if (Look.black) Color(0xF0000000) else Color(0xE6080C24)).border(3.dp, C.Gold, CircleShape).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,

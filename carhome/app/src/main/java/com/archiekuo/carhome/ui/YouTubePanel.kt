@@ -75,7 +75,7 @@ fun YouTubePanel(
         Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(14.dp)).background(Color.Black)) {
             AndroidView(factory = { web.also { (it.parent as? android.view.ViewGroup)?.removeView(it) } }, modifier = Modifier.fillMaxSize())
             if (hideVideo) {
-                Column(Modifier.fillMaxSize().background(Color(0xF2070C26)), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Column(Modifier.fillMaxSize().background(if (Look.black) Color(0xF5000000) else Color(0xF2070C26)), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Icon(Icons.Rounded.DirectionsCar, null, tint = C.Gold, modifier = Modifier.size(56.dp))
                     Text("行駛中，只播聲音", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 8.dp))
                     Text("停車後會自動顯示畫面", fontSize = 17.sp, color = C.Sub, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))

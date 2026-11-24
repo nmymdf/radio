@@ -32,7 +32,7 @@ import com.archiekuo.carhome.data.AppsRepo
 
 @Composable
 private fun PanelFrame(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().background(Color(0xF5070C26)).clickable(enabled = true, onClick = {}).padding(horizontal = 28.dp, vertical = 18.dp)) {
+    Column(Modifier.fillMaxSize().background(panelColor()).clickable(enabled = true, onClick = {}).padding(horizontal = 28.dp, vertical = 18.dp)) {
         Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             CircleBtn(Icons.Rounded.ArrowBackIosNew, "返回", 56.dp, 26.dp, onBack)
             GoldText(title, 32.sp, Modifier.weight(1f), weight = FontWeight.Black)
@@ -116,6 +116,7 @@ private fun Group(title: String, content: @Composable ColumnScope.() -> Unit) {
 data class SettingsModel(
     val autoRadio: Boolean, val autoShield: Boolean, val shieldLabel: String, val autoFm: Boolean, val fmLabel: String,
     val ytRestrict: Boolean, val viz: Boolean, val vizTempo: Boolean, val hideStatus: Boolean, val overlayOk: Boolean, val vizReal: Boolean,
+    val black: Boolean = false,
 )
 
 @Composable
@@ -123,7 +124,7 @@ fun SettingsPanel(
     m: SettingsModel,
     onAutoRadio: (Boolean) -> Unit, onAutoShield: (Boolean) -> Unit, onPickShield: () -> Unit,
     onAutoFm: (Boolean) -> Unit, onPickFm: () -> Unit, onYt: (Boolean) -> Unit, onViz: (Boolean) -> Unit, onVizTempo: (Boolean) -> Unit,
-    onHideStatus: (Boolean) -> Unit, onOverlay: () -> Unit, onPermissions: () -> Unit, onDefaultHome: () -> Unit, onResetTiles: () -> Unit,
+    onHideStatus: (Boolean) -> Unit, onBlack: (Boolean) -> Unit = {}, onOverlay: () -> Unit, onPermissions: () -> Unit, onDefaultHome: () -> Unit, onResetTiles: () -> Unit,
     onBack: () -> Unit,
 ) {
     PanelFrame("車機桌面設定", onBack) {
@@ -141,6 +142,7 @@ fun SettingsPanel(
                 SwitchRow("行駛中只播聲音", "車子在動時遮住畫面；副駕駛要看時，按「副駕駛觀看」", m.ytRestrict, onYt)
             }
             Group("畫面") {
+                SwitchRow("全黑桌面", "關閉＝午夜藍加金色；打開＝全黑背景，晚上開車更不刺眼", m.black, onBlack)
                 SwitchRow("跳動光條", if (m.vizReal) "下方彩虹光條跟著音樂跳動（已讀到聲音）" else "下方彩虹光條（讀不到聲音時會柔和起伏）", m.viz, onViz)
                 SwitchRow("光條流動跟著節奏", "快歌流得快，慢歌流得慢", m.vizTempo, onVizTempo)
                 SwitchRow("隱藏系統狀態列", "畫面更乾淨（日期和網路狀態桌面上都有）", m.hideStatus, onHideStatus)
