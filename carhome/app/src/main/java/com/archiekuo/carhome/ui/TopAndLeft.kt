@@ -90,7 +90,7 @@ fun ClockCompass(now: Long, heading: Float?) {
                     C.Gold.copy(alpha = if (d % 90 == 0) 1f else 0.55f),
                     Offset(c.x + r1 * sin(a).toFloat(), c.y - r1 * cos(a).toFloat()),
                     Offset(c.x + r2 * sin(a).toFloat(), c.y - r2 * cos(a).toFloat()),
-                    strokeWidth = (if (d % 90 == 0) 3 else 1.5f).dp.toPx(),
+                    strokeWidth = (if (d % 90 == 0) 3f else 1.5f).dp.toPx(),
                 )
             }
             if (heading != null) {
