@@ -205,7 +205,10 @@ class CarApp : Application() {
         return svc
     }
 
+    fun testOpenSplitDesk() = openSplitDesk()
+
     private fun openSplitDesk() {
+        android.util.Log.i("CarHome", "openSplitDesk split=" + SplitService.instance?.isSplit())
         // 分割畫面時，新開的 App 會自動放進空的那一半
         val i = Intent(this, SplitDeskActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { startActivity(i) }
@@ -235,7 +238,7 @@ class CarApp : Application() {
     }
 
     private suspend fun enterSplitNow(svc: SplitService) {
-        svc.toggleSplit()
+        android.util.Log.i("CarHome", "enterSplit toggle=" + svc.toggleSplit())
         var waited = 0
         while (waited < 2500 && !svc.isSplit()) { delay(200); waited += 200 }
         if (svc.isSplit()) {

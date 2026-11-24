@@ -36,7 +36,8 @@ private sealed interface Overlay {
     data object Drawer : Overlay
     data object Settings : Overlay
     data class PickTile(val slot: Int) : Overlay
-    data object PickShield : Overlay
+    /** back：按返回要回到哪裡（從設定進來回設定，長按圓圈進來回桌面） */
+    data class PickShield(val back: Overlay = Settings) : Overlay
     data object PickFm : Overlay
     data object PickPhoto : Overlay
     data object NavMenu : Overlay
@@ -121,7 +122,8 @@ fun HomeScreen(
     // 桌面本身不能被「返回」關掉
     BackHandler(enabled = true) {
         when {
-            overlay == Overlay.Background || overlay == Overlay.PickShield -> overlay = Overlay.Settings
+            overlay == Overlay.Background -> overlay = Overlay.Settings
+            overlay is Overlay.PickShield -> overlay = (overlay as Overlay.PickShield).back
             overlay != Overlay.None -> overlay = Overlay.None
             ytFull -> ytFull = false
             ytActive && web.canGoBack() -> web.goBack()
@@ -136,7 +138,7 @@ fun HomeScreen(
 
     fun shieldApp() = app.shieldPackage()?.let { app.apps.find(it) }
     fun fmApp() = app.fmPackage()?.let { app.apps.find(it) }
-    fun launchShield() { val s = app.shieldPackage(); if (s != null) app.apps.launch(s) else { app.say("找不到神盾 App，請選擇"); overlay = Overlay.PickShield } }
+    fun launchShield() { val s = app.shieldPackage(); if (s != null) app.apps.launch(s) else { app.say("找不到神盾 App，請選擇"); overlay = Overlay.PickShield(Overlay.None) } }
     fun openNav() { val n = app.navPackage(); if (n != null) app.apps.launch(n) else overlay = Overlay.PickTile(2) }
     val navLabel = app.navPackage()?.let { app.apps.find(it)?.label } ?: "導航"
 
@@ -277,7 +279,7 @@ fun HomeScreen(
                 overlay = Overlay.None
                 if (a != null && roles[o.slot] == Role.NAV) app.apps.launch(a.pkg)
             }) { overlay = Overlay.None }
-            Overlay.PickShield -> AppPicker("選擇神盾 App", app.apps, apps, allowReset = true, onPick = { a -> p.shieldPkg.set(a?.pkg ?: ""); overlay = Overlay.Settings }) { overlay = Overlay.Settings }
+            is Overlay.PickShield -> AppPicker("選擇神盾 App", app.apps, apps, allowReset = true, onPick = { a -> p.shieldPkg.set(a?.pkg ?: ""); overlay = o.back }) { overlay = o.back }
             Overlay.PickFm -> AppPicker("選擇 FM 收音機 App", app.apps, apps, allowReset = true, onPick = { a -> p.fmPkg.set(a?.pkg ?: ""); overlay = if (mode == "fm") Overlay.None else Overlay.Settings }) { overlay = Overlay.None }
             Overlay.Settings -> {
                 val mem = rememberMemory()
@@ -288,7 +290,7 @@ fun HomeScreen(
                         ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
                         shieldLeft = shieldLeft, splitOn = splitOn, memText = mem?.text ?: "",
                     ),
-                    onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield },
+                    onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield(Overlay.Settings) },
                     onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,
                     onViz = { v -> p.viz.set(v); if (v) app.viz.start() else app.viz.stop() }, onVizTempo = p.vizTempo::set,
                     onHideStatus = p.hideStatus::set, onBlack = p.black::set,
