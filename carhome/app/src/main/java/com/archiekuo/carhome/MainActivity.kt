@@ -14,6 +14,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.*
@@ -76,12 +77,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             CarTheme {
                 // 依螢幕大小等比縮放：照 1280×720 設計，任何尺寸的車機都能完整顯示
-                val cfg = LocalConfiguration.current
                 val d = LocalDensity.current
-                val aspect = cfg.screenWidthDp.toFloat() / cfg.screenHeightDp.coerceAtLeast(1)
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (aspect >= 1.5f) {
-                        val scale = minOf(cfg.screenWidthDp / 1280f, cfg.screenHeightDp / 720f)
+                BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    val wDp = maxWidth.value
+                    val hDp = maxHeight.value.coerceAtLeast(1f)
+                    if (wDp / hDp >= 1.5f) {
+                        val scale = minOf(wDp / 1280f, hDp / 720f)
                         CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
                             Box(Modifier.requiredSize(1280.dp, 720.dp)) {
                                 HomeScreen(app, w, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
@@ -89,8 +90,8 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         // 桌面本身被分割成窄的（有些車機會這樣）：改用精簡桌面
-                        val scale = (cfg.screenHeightDp / 720f).coerceAtLeast(0.3f)
-                        val designW = (cfg.screenWidthDp / scale).coerceAtLeast(300f)
+                        val scale = (hDp / 720f).coerceAtLeast(0.3f)
+                        val designW = (wDp / scale).coerceAtLeast(300f)
                         CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
                             Box(Modifier.requiredSize(designW.dp, 720.dp)) { CompactDesk(app, designW) {} }
                         }

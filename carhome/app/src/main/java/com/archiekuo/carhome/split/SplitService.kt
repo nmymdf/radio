@@ -40,6 +40,9 @@ class SplitService : AccessibilityService() {
     private var button: FloatButton? = null
     private var buttonShown = false
     private val checkRunnable = Runnable { check() }
+    /** 導航視窗的位置（浮動按鈕預設放在導航那一邊的左下角） */
+    private var navBounds: android.graphics.Rect? = null
+    private var lp: WindowManager.LayoutParams? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -86,9 +89,15 @@ class SplitService : AccessibilityService() {
     private fun check() {
         if (Build.VERSION.SDK_INT < 24) return
         val nav = app.navPackage()
-        val show = nav != null && isVisible(nav)
-        if (show) app.navSeenAt = android.os.SystemClock.elapsedRealtime()
-        if (show) showButton(isSplit()) else hideButton()
+        val navWin = if (nav == null) null else runCatching {
+            windows.firstOrNull { w -> w.type == AccessibilityWindowInfo.TYPE_APPLICATION && w.root?.packageName?.toString() == nav }
+        }.getOrNull()
+        if (navWin != null) {
+            app.navSeenAt = android.os.SystemClock.elapsedRealtime()
+            val r = android.graphics.Rect(); navWin.getBoundsInScreen(r)
+            navBounds = r
+            showButton(isSplit())
+        } else hideButton()
     }
 
     // ---------------- 金色浮動按鈕 ----------------
@@ -107,10 +116,20 @@ class SplitService : AccessibilityService() {
         val b = button ?: FloatButton(this).also { button = it }
         b.split = split
         b.invalidate()
-        if (buttonShown) return
         val size = (72 * resources.displayMetrics.density).toInt()
         val sc = screen()
         val margin = (18 * resources.displayMetrics.density).toInt()
+        // 使用者沒拖過：跟著導航視窗放在它的左下角（不會蓋到桌面的方塊）
+        fun defaultX() = (navBounds?.left ?: 0) + margin
+        fun defaultY() = (navBounds?.bottom ?: sc.heightPixels) - size - margin * 3
+        if (buttonShown) {
+            val cur = lp
+            if (cur != null && app.prefs.floatX < 0) {
+                val nx = defaultX(); val ny = defaultY()
+                if (cur.x != nx || cur.y != ny) { cur.x = nx; cur.y = ny; runCatching { wm().updateViewLayout(b, cur) } }
+            }
+            return
+        }
         val lp = WindowManager.LayoutParams(
             size, size,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
@@ -118,9 +137,10 @@ class SplitService : AccessibilityService() {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = app.prefs.floatX.takeIf { it in 0..(sc.widthPixels - size) } ?: margin
-            y = app.prefs.floatY.takeIf { it in 0..(sc.heightPixels - size) } ?: (sc.heightPixels - size - margin * 3)
+            x = app.prefs.floatX.takeIf { it in 0..(sc.widthPixels - size) } ?: defaultX()
+            y = app.prefs.floatY.takeIf { it in 0..(sc.heightPixels - size) } ?: defaultY()
         }
+        this.lp = lp
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var dragging = false
         b.setOnTouchListener { v, e ->
             when (e.actionMasked) {

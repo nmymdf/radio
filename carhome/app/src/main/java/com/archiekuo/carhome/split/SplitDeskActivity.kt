@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.CompositionLocalProvider
@@ -31,11 +32,11 @@ class SplitDeskActivity : ComponentActivity() {
         setContent {
             CarTheme {
                 // 高度固定照 720 設計，寬度跟著分割比例（1/3、1/2、2/3）
-                val cfg = LocalConfiguration.current
-                val scale = (cfg.screenHeightDp / 720f).coerceAtLeast(0.3f)
-                val designW = (cfg.screenWidthDp / scale).coerceAtLeast(300f)
+                // 用視窗實際大小（拖分隔線時系統不一定會馬上通知新的設定）
                 val d = LocalDensity.current
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    val scale = (maxHeight.value / 720f).coerceAtLeast(0.3f)
+                    val designW = (maxWidth.value / scale).coerceAtLeast(300f)
                     CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
                         Box(Modifier.requiredSize(designW.dp, 720.dp)) {
                             CompactDesk(app, designW, onClose = { finish() })
