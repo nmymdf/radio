@@ -62,7 +62,7 @@ fun NavCard(g: NavGuide, modifier: Modifier, compact: Boolean = false, onClick: 
             }
             Text(g.actionLine, fontSize = (if (compact) 19 else 21).sp, fontWeight = FontWeight.Bold, color = C.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
             val rest = remainText(g)
-            if (rest.isNotEmpty()) Text(rest, fontSize = (if (compact) 15 else 17).sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+            if (rest.isNotEmpty()) Text(rest, fontSize = (if (compact) 15 else 17).sp, color = C.Sub, maxLines = if (compact) 2 else 1, lineHeight = (if (compact) 19 else 22).sp, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
         }
     }
 }

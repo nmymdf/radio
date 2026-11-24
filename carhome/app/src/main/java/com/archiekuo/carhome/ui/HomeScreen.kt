@@ -121,6 +121,7 @@ fun HomeScreen(
     // 桌面本身不能被「返回」關掉
     BackHandler(enabled = true) {
         when {
+            overlay == Overlay.Background || overlay == Overlay.PickShield -> overlay = Overlay.Settings
             overlay != Overlay.None -> overlay = Overlay.None
             ytFull -> ytFull = false
             ytActive && web.canGoBack() -> web.goBack()

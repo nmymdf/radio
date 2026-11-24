@@ -206,8 +206,8 @@ class CarApp : Application() {
     }
 
     private fun openSplitDesk() {
-        val i = Intent(this, SplitDeskActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT)
+        // 分割畫面時，新開的 App 會自動放進空的那一半
+        val i = Intent(this, SplitDeskActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { startActivity(i) }
     }
 

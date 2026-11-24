@@ -104,19 +104,54 @@ class WeatherRepo {
     private var lastLat = 0.0
     private var lastLon = 0.0
     private var busy = false
+    private var retryJob: kotlinx.coroutines.Job? = null
 
     fun refresh(lat: Double, lon: Double, force: Boolean = false) {
         val now = SystemClock.elapsedRealtime()
         val far = Math.abs(lat - lastLat) + Math.abs(lon - lastLon) > 0.1
         if (busy) return
-        if (!force && _weather.value != null && now - lastTime < 30 * 60_000L && !far) return
+        if (!force && _weather.value?.detail != null && now - lastTime < 30 * 60_000L && !far) return
+        if (!force && _weather.value == null && now - lastTime < 20_000L && !far) return
         lastTime = now; lastLat = lat; lastLon = lon
         busy = true
+        retryJob?.cancel()
         scope.launch {
-            runCatching { _weather.value = load(lat, lon) }
-                .onFailure { lastTime = now - 29 * 60_000L } // 失敗的話 1 分鐘後再試
+            val w = runCatching { load(lat, lon) }
+                .onFailure { android.util.Log.w("CarHome", "weather detail failed: $it") }
+                .getOrNull()
+                ?: runCatching { loadSimple(lat, lon) }
+                    .onFailure { android.util.Log.w("CarHome", "weather simple failed: $it") }
+                    .getOrNull()
             busy = false
+            if (w != null) {
+                _weather.value = w
+                // 空氣品質另外抓，慢了也不影響天氣顯示
+                runCatching { loadAir(lat, lon) }.getOrNull()?.let { (aqi, pm) ->
+                    _weather.value = _weather.value?.let { cur -> cur.copy(detail = cur.detail?.copy(aqi = aqi, pm25 = pm)) }
+                }
+            }
+            // 沒抓到詳細資料：1 分鐘後自動再試（不用等畫面觸發）
+            if (w?.detail == null) {
+                retryJob = scope.launch { kotlinx.coroutines.delay(60_000); refresh(lat, lon, force = true) }
+            }
         }
+    }
+
+    /** 舊版的簡單查詢（詳細查詢失敗時至少顯示天氣卡） */
+    private suspend fun loadSimple(lat: Double, lon: Double): Weather {
+        val j = JSONObject(Http.get(String.format(Locale.US,
+            "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1", lat, lon)))
+        val cur = j.getJSONObject("current")
+        val d = j.optJSONObject("daily")
+        fun first(k: String): Int? = d?.optJSONArray(k)?.let { if (it.length() > 0 && !it.isNull(0)) Math.round(it.getDouble(0)).toInt() else null }
+        return Weather(Math.round(cur.getDouble("temperature_2m")).toInt(), cur.optInt("weather_code"), first("temperature_2m_max"), first("temperature_2m_min"), first("precipitation_probability_max"))
+    }
+
+    private suspend fun loadAir(lat: Double, lon: Double): Pair<Int?, Int?> {
+        val a = JSONObject(Http.get(String.format(Locale.US, "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%.4f&longitude=%.4f&current=us_aqi,pm2_5&timezone=auto", lat, lon)))
+            .getJSONObject("current")
+        fun v(k: String) = if (a.has(k) && !a.isNull(k)) Math.round(a.optDouble(k)).toInt() else null
+        return v("us_aqi") to v("pm2_5")
     }
 
     private suspend fun load(lat: Double, lon: Double): Weather {
@@ -179,13 +214,6 @@ class WeatherRepo {
                 )
             }
         }
-        // 空氣品質（另一個免費服務；失敗就不顯示）
-        val air = runCatching {
-            val a = JSONObject(Http.get(String.format(Locale.US, "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%.4f&longitude=%.4f&current=us_aqi,pm2_5&timezone=auto", lat, lon)))
-                .getJSONObject("current")
-            r(a.curNum("us_aqi")) to r(a.curNum("pm2_5"))
-        }.getOrNull()
-
         val detail = WeatherDetail(
             feels = r(cur.curNum("apparent_temperature")),
             humidity = r(cur.curNum("relative_humidity_2m")),
@@ -195,7 +223,7 @@ class WeatherRepo {
             sunrise = daily.str("sunrise", 0)?.takeIf { it.length >= 16 }?.substring(11, 16),
             sunset = daily.str("sunset", 0)?.takeIf { it.length >= 16 }?.substring(11, 16),
             hours = hours, days = days,
-            aqi = air?.first, pm25 = air?.second,
+            aqi = null, pm25 = null,
         )
         return Weather(
             temp = r(cur.curNum("temperature_2m")) ?: error("no temp"),

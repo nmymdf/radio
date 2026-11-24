@@ -25,6 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -102,7 +105,7 @@ fun AppsPage(
                     if (!pickSlot) {
                         MenuRow(Icons.Rounded.Apps, "放到下方方塊", Color.White) { pickSlot = true }
                         MenuRow(Icons.Rounded.Info, "App 資訊", Color.White) { menuFor = null; onInfo(a) }
-                        MenuRow(Icons.Rounded.Delete, if (a.system) "移除（原廠內建，改成停用）" else "移除", C.Red) { menuFor = null; onUninstall(a) }
+                        MenuRow(Icons.Rounded.Delete, if (a.system) "停用（原廠內建）" else "移除", C.Red) { menuFor = null; onUninstall(a) }
                     } else {
                         tileLabels.forEachIndexed { i, label ->
                             MenuRow(null, "第 ${i + 1} 個　（現在：$label）", Color.White) { menuFor = null; pickSlot = false; onAssign(a, i) }
@@ -124,8 +127,11 @@ private fun MenuRow(icon: ImageVector?, text: String, color: Color, onClick: () 
 
 @Composable
 private fun SearchBox(value: String, onChange: (String) -> Unit, modifier: Modifier, onVoice: (() -> Unit)?, onDone: () -> Unit) {
+    val fr = remember { FocusRequester() }
+    val kb = LocalSoftwareKeyboardController.current
     Row(
-        modifier.height(52.dp).clip(RoundedCornerShape(26.dp)).background(Color(0x99080E2C)).border(1.5.dp, C.Gold, RoundedCornerShape(26.dp)).padding(start = 16.dp, end = 6.dp),
+        modifier.height(52.dp).clip(RoundedCornerShape(26.dp)).background(Color(0x99080E2C)).border(1.5.dp, C.Gold, RoundedCornerShape(26.dp))
+            .clickable { runCatching { fr.requestFocus() }; kb?.show() }.padding(start = 16.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Rounded.Search, null, tint = C.Gold, modifier = Modifier.size(26.dp))
@@ -133,7 +139,7 @@ private fun SearchBox(value: String, onChange: (String) -> Unit, modifier: Modif
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (value.isEmpty()) Text("搜尋 App", fontSize = 20.sp, color = C.Dim)
             BasicTextField(
-                value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth().focusRequester(fr),
                 textStyle = TextStyle(fontSize = 20.sp, color = Color.White), cursorBrush = SolidColor(C.Gold),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { onDone() }),
             )
