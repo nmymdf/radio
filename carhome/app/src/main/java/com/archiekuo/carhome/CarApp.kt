@@ -263,7 +263,12 @@ class CarApp : Application() {
         splitJob?.cancel()
         val svc = SplitService.instance
         scope.launch {
-            if (svc != null && svc.isSplit()) { svc.toggleSplit(); delay(700) }
+            if (svc != null && svc.isSplit()) {
+                svc.toggleSplit()
+                var waited = 0
+                while (waited < 2000 && svc.isSplit()) { delay(150); waited += 150 }
+                delay(300)
+            }
             bringHome()
         }
     }

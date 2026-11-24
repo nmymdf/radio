@@ -54,11 +54,11 @@ fun distText(m: Int): Pair<String, String> = when {
     else -> "${m / 1000}" to "公里"
 }
 
-fun remainText(g: NavGuide): String {
+fun remainText(g: NavGuide, twoLines: Boolean = false): String {
     val (d, u) = distText(g.remainDist)
     val min = (g.remainSec + 59) / 60
     val t = if (min >= 60) "${min / 60} 小時 ${min % 60} 分" else "$min 分鐘"
-    return if (g.remainDist <= 0) "" else "剩 $d $u ・ 約 $t"
+    return if (g.remainDist <= 0) "" else if (twoLines) "剩 $d $u\n約 $t" else "剩 $d $u ・ 約 $t"
 }
 
 /**

@@ -109,7 +109,7 @@ fun CompactDesk(app: CarApp, width: Float, onClose: () -> Unit) {
                         CTile(Icons.Rounded.Shield, "神盾", 100, ::shield)
                         CTile(Icons.Rounded.SmartDisplay, "YouTube", 100) { app.openYouTubeOnDesk() }
                         CTile(Icons.Rounded.Apps, "所有 App", 100) { drawer = true }
-                        CTile(Icons.Rounded.Close, "結束分割", 100) { app.endSplit(); onClose() }
+                        CTile(Icons.Rounded.Close, "結束分割", 100) { app.endSplit() }
                     }
                 }
                 1 -> {
@@ -123,7 +123,7 @@ fun CompactDesk(app: CarApp, width: Float, onClose: () -> Unit) {
                         CTile(Icons.Rounded.Fullscreen, "導航全畫面", 96) { app.navFull() }
                         CTile(Icons.Rounded.Shield, "神盾", 96, ::shield)
                         CTile(Icons.Rounded.Apps, "所有 App", 96) { drawer = true }
-                        CTile(Icons.Rounded.Close, "結束分割", 96) { app.endSplit(); onClose() }
+                        CTile(Icons.Rounded.Close, "結束分割", 96) { app.endSplit() }
                     }
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { AuthorLine(15.sp) }
                 }
@@ -134,7 +134,7 @@ fun CompactDesk(app: CarApp, width: Float, onClose: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         CTile(Icons.Rounded.Fullscreen, "導航全畫面", 84) { app.navFull() }
-                        CTile(Icons.Rounded.Close, "結束分割", 84) { app.endSplit(); onClose() }
+                        CTile(Icons.Rounded.Close, "結束分割", 84) { app.endSplit() }
                     }
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { AuthorLine(15.sp) }
                 }
