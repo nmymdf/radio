@@ -1,7 +1,7 @@
 {
   "name": "net-radio-desktop",
   "productName": "網路收音機",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "網路收音機 電腦版",
   "author": "ArchieKUO",
   "main": "main.js",

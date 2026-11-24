@@ -25,6 +25,15 @@ const P = {
   check: '<path d="M5 12l5 5 9-10"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>',
+  news: '<rect x="3" y="4" width="15" height="16" rx="2"/><path d="M18 8h3v10a2 2 0 0 1-2 2M7 8h7M7 12h7M7 16h4"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/>',
+  school: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M22 9v6"/>',
+  voice: '<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5M17 5a5 5 0 0 1 0 6M19.5 2.5a8.5 8.5 0 0 1 0 11"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  lang: '<path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c-1 4-4 7-7 8"/><path d="M13 21l4-9 4 9M14.5 18h5"/>',
+  db: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+  radio: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8l10-5"/><circle cx="8" cy="14" r="2.5"/><path d="M14 12h4M14 16h4"/>',
   hist: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
 };
 const FILLED = new Set(['play', 'pause', 'prev', 'next', 'home', 'grid', 'user', 'flame', 'note', 'eq']);
@@ -37,27 +46,33 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const A = (n) => `assets/${n}`;
 let VERSION = '1.1';
 
-/* ---------- 分類 ---------- */
-const HOT = [
-  { key: 'classical', title: '古典音樂', tags: ['classical'], art: 'art_classic.webp' },
-  { key: 'jazz', title: '爵士音樂', tags: ['jazz', 'smooth jazz'], art: 'art_jazz.webp' },
-  { key: 'cpop', title: '華語流行', tags: ['mandopop', 'c-pop', 'chinese pop', 'mandarin'], art: 'art_pop.webp' },
-  { key: 'easy', title: '輕音樂', tags: ['easy listening', 'lounge', 'instrumental'], art: 'art_light.webp' },
-];
-const MUSIC = [
-  { key: 'hot', title: '熱門推薦', tags: [], art: 'art_radio.webp', icon: 'ic_cat_hot.png', tint: '#2B3672' },
-  { key: 'world', title: '國際音樂', tags: ['pop', 'top 40', 'hits'], art: 'art_sunset.webp', icon: 'ic_cat_world.png', tint: '#243A70' },
-  { key: 'rock', title: '搖滾音樂', tags: ['rock', 'classic rock'], art: 'art_jazz.webp', icon: 'ic_cat_rock.png', tint: '#3A2F70' },
-  { key: 'love', title: '情歌浪漫', tags: ['love songs', 'romantic', 'ballads'], art: 'art_cafe.webp', icon: 'ic_cat_love.png', tint: '#4B2B6C' },
-  { key: 'zen', title: '佛教音樂', tags: ['buddhist', 'buddhism', 'meditation'], art: 'art_zen.webp', icon: 'ic_cat_zen.png', tint: '#2F396C' },
-  { key: 'nature', title: '自然放鬆', tags: ['nature', 'relax', 'ambient'], art: 'art_lake.webp', icon: 'ic_cat_nature.png', tint: '#22406A' },
-];
-const ALL = [...HOT, ...MUSIC];
-const cat = (k) => ALL.find((c) => c.key === k) || MUSIC[0];
-const guess = (tags) => { const t = (tags || '').toLowerCase(); return (ALL.find((c) => c.tags.some((x) => t.includes(x))) || MUSIC[0]).key; };
-const fromQuery = (q) => ALL.find((c) => q.includes(c.title.slice(0, 2)) || (q.length >= 2 && c.title.includes(q)));
-const artOf = (s) => A(cat(s.cat).art);
-const subOf = (s) => [s.country, cat(s.cat).title, s.br > 0 ? `${s.br} kbps` : ''].filter(Boolean).join(' ・ ');
+/* ---------- 分類（來自 catalog.json，可從 GitHub 更新） ---------- */
+let CATS = [];
+const GROUPS = [['music', '音樂', 'note'], ['talk', '講話節目', 'mic'], ['region', '依地區', 'pin']];
+const HOTC = () => CATS.filter((c) => c.home === 'hot');
+const MUSICC = () => CATS.filter((c) => c.home === 'music');
+const TALKC = () => CATS.filter((c) => c.home === 'talk');
+const inGroup = (g) => CATS.filter((c) => c.group === g);
+const cat = (k) => CATS.find((c) => c.key === k) || CATS[0] || { key: 'hot', title: '熱門推薦', group: 'music', art: 'art_radio', specs: [{ top: '1' }], priority: [] };
+const guess = (tags) => { const t = (tags || '').toLowerCase(); return (CATS.find((c) => c.group === 'music' && (c.specs || []).some((s) => s.tag && t.includes(s.tag))) || cat('hot')).key; };
+const fromQuery = (q) => CATS.find((c) => q.includes(c.title.slice(0, 2)) || (q.length >= 2 && c.title.includes(q)));
+const TALK_ICON = { zhnews: 'news', ennews: 'globe', enlearn: 'school', entalk: 'voice' };
+
+/* 國家、語言轉中文 */
+const COUNTRY = { TW: '台灣', HK: '香港', MO: '澳門', CN: '中國', SG: '新加坡', MY: '馬來西亞', JP: '日本', KR: '韓國', US: '美國', GB: '英國', CA: '加拿大', AU: '澳洲', NZ: '紐西蘭', DE: '德國', FR: '法國', IT: '義大利', ES: '西班牙', NL: '荷蘭', CH: '瑞士', AT: '奧地利', BE: '比利時', SE: '瑞典', NO: '挪威', DK: '丹麥', FI: '芬蘭', IE: '愛爾蘭', PT: '葡萄牙', RU: '俄羅斯', IN: '印度', TH: '泰國', VN: '越南', PH: '菲律賓', ID: '印尼', BR: '巴西', MX: '墨西哥', AR: '阿根廷', GR: '希臘', PL: '波蘭', CZ: '捷克', HU: '匈牙利', TR: '土耳其', IL: '以色列' };
+const LANGS = [['taiwanese', '台語'], ['hokkien', '台語'], ['min nan', '台語'], ['minnan', '台語'], ['cantonese', '粵語'], ['hakka', '客語'], ['mandarin', '國語'], ['chinese', '中文'], ['english', '英語'], ['japanese', '日語'], ['korean', '韓語'], ['german', '德語'], ['french', '法語'], ['spanish', '西班牙語'], ['italian', '義大利語'], ['portuguese', '葡萄牙語'], ['russian', '俄語'], ['dutch', '荷蘭語'], ['thai', '泰語'], ['vietnamese', '越南語'], ['malay', '馬來語'], ['indonesian', '印尼語']];
+const countryZh = (s) => COUNTRY[(s.cc || '').toUpperCase()] || s.country || '';
+function langZh(s) {
+  const l = (s.lang || '').toLowerCase(); if (!l) return '';
+  const f = [...new Set(LANGS.filter(([k]) => l.includes(k)).map(([, v]) => v))];
+  return f.length ? f.slice(0, 2).join('、') : (s.lang.split(',')[0].trim().replace(/^./, (c) => c.toUpperCase()));
+}
+const placeOf = (s) => [...new Set([countryZh(s), (s.state || '').trim()].filter(Boolean))].join(' ・ ');
+const qualityOf = (s) => [s.br > 0 ? `${s.br} kbps` : '', (s.codec || '').toUpperCase()].filter(Boolean).join(' ・ ');
+const sourceOf = (s) => (s.cur ? '精選電台 ・ Radio Browser' : 'Radio Browser 公開資料庫');
+const artOf = (s) => A(`${cat(s.cat).art}.webp`);
+const subOf = (s) => { const p = [countryZh(s), langZh(s), s.br > 0 ? `${s.br} kbps` : ''].filter(Boolean); return (p.length ? p : [cat(s.cat).title]).join(' ・ '); };
+const liveOf = (s) => ['直播中', countryZh(s), langZh(s)].filter(Boolean).join(' ・ ');
 
 const BANNERS = [
   { img: 'banner_taipei.webp', l1: '今晚，', l2: '聽點', g: '好音樂', sub: '陪伴每一段安靜時光', key: null },
@@ -98,24 +113,32 @@ function parse(arr, c) {
     if (!url || o.lastcheckok === 0) continue;
     out.push({
       id: o.stationuuid || url, name: (o.name || '').trim().replace(/\s+/g, ' ') || '未命名電台', url,
-      country: o.country || '', br: o.bitrate || 0, hls: o.hls === 1, votes: o.votes || 0, cat: c || guess(o.tags),
+      country: o.country || '', cc: o.countrycode || '', state: o.state || '', lang: o.language || '', home: o.homepage || '', codec: o.codec || '',
+      br: o.bitrate || 0, hls: o.hls === 1, votes: o.votes || 0, cat: c || guess(o.tags),
     });
   }
   return out;
 }
 const clean = (l) => { const seen = new Set(); return [...l].sort((a, b) => b.votes - a.votes).filter((s) => { const k = s.name.toLowerCase().trim(); if (seen.has(k)) return false; seen.add(k); return true; }); };
 const cache = {};
+function prioritize(list, c) {
+  const pr = c.priority || []; if (!pr.length) return list;
+  const rank = (s) => { const i = pr.findIndex((p) => s.name.toLowerCase().includes(p.toLowerCase())); return i < 0 ? 1e9 : i; };
+  return list.map((s) => (rank(s) < 1e9 ? { ...s, cur: true } : s)).sort((a, b) => rank(a) - rank(b) || b.votes - a.votes);
+}
+function specPath(sp) {
+  const limit = sp.limit || '60';
+  if (sp.top) return `/json/stations/topvote/${limit}?hidebroken=true`;
+  const q = Object.entries(sp).filter(([k]) => k !== 'limit').map(([k, v]) => `${k}=${enc(v)}`).join('&');
+  return `/json/stations/search?${q}&hidebroken=true&order=votes&reverse=true&limit=${limit}`;
+}
 async function loadCat(key, force) {
   if (!force && cache[key]) return cache[key];
   const c = cat(key);
-  let raw;
-  if (!c.tags.length) raw = parse(await window.native.rb('/json/stations/topvote/80?hidebroken=true'), key);
-  else {
-    const parts = await Promise.allSettled(c.tags.map((t) => window.native.rb(`/json/stations/search?tag=${enc(t)}&hidebroken=true&order=votes&reverse=true&limit=60`)));
-    if (parts.every((p) => p.status === 'rejected')) throw new Error('net');
-    raw = parts.flatMap((p) => (p.status === 'fulfilled' ? parse(p.value, key) : []));
-  }
-  const res = clean(raw).slice(0, 80);
+  const specs = (c.specs && c.specs.length) ? c.specs : [{ top: '1' }];
+  const parts = await Promise.allSettled(specs.map((sp) => window.native.rb(specPath(sp))));
+  if (parts.every((p) => p.status === 'rejected')) throw new Error('net');
+  const res = prioritize(clean(parts.flatMap((p) => (p.status === 'fulfilled' ? parse(p.value, key) : []))), c).slice(0, 100);
   if (!res.length) throw new Error('這個分類目前找不到電台');
   cache[key] = res;
   return res;
@@ -127,7 +150,7 @@ async function searchStations(q) {
     c ? loadCat(c.key) : Promise.resolve([]),
   ]);
   if (a.status === 'rejected' && b.status === 'rejected') throw new Error('net');
-  return clean([...(b.value || []), ...(a.value || [])]).slice(0, 80);
+  return clean([...(b.value || []), ...(a.value || [])]).slice(0, 100);
 }
 const friendly = (e) => (String(e && e.message).includes('找不到') ? e.message : '連不上電台資料庫，請確認網路後再試一次');
 
@@ -212,7 +235,7 @@ async function playBanner(key) {
 
 /* ---------- 導覽 ---------- */
 const TABS = ['home', 'cats', 'fav', 'mine'];
-const nav = { stack: [{ r: 'home' }], catKey: 'classical' };
+const nav = { stack: [{ r: 'home' }], catKey: 'classical', catGroup: null };
 const cur = () => nav.stack[nav.stack.length - 1];
 function goTab(r) { nav.stack = [{ r }]; render(true); }
 function open(r, extra) { if (cur().r === r) return; nav.stack.push({ r, ...extra }); render(true); }
@@ -244,7 +267,7 @@ function statusHtml() {
   let dot, text, color;
   if (pl.error) { dot = 'var(--red)'; text = pl.error; color = 'var(--red)'; }
   else if (pl.buffering) { dot = 'var(--gold)'; text = '連線中…'; color = 'var(--gold)'; }
-  else if (pl.playing) { dot = 'var(--green)'; text = 'Live Radio'; color = 'var(--greenT)'; }
+  else if (pl.playing) { dot = 'var(--green)'; text = pl.st ? liveOf(pl.st) : '直播中'; color = 'var(--greenT)'; }
   else { dot = 'var(--dim)'; text = '已暫停'; color = 'var(--sub)'; }
   return `<i style="background:${dot}"></i><span style="color:${color}">${esc(text)}</span>`;
 }
@@ -264,9 +287,11 @@ function pageHome() {
   <div class="carousel card" id="car"><div class="track" id="track" style="transform:translateX(-${state.slide * 100}%)">${slides}</div>
     <div class="dots">${BANNERS.map((_, i) => `<span class="${i === state.slide ? 'on' : ''}" data-act="dot" data-i="${i}"></span>`).join('')}</div></div>
   <div class="sec"><span style="color:var(--gold);display:flex">${ic('flame', 30)}</span><h2>熱門電台</h2><button class="more" data-act="tab" data-r="cats">查看更多${ic('chev', 20)}</button></div>
-  <div class="hot">${HOT.map((c) => `<div class="hotc card" data-act="cat" data-k="${c.key}"><img src="${A(c.art)}" alt=""><div class="lb">${c.title}<span style="color:var(--gold);display:flex">${ic('eq', 18)}</span></div></div>`).join('')}</div>
+  <div class="hot">${HOTC().map((c) => `<div class="hotc card" data-act="cat" data-k="${c.key}"><img src="${A(c.art + '.webp')}" alt=""><div class="lb">${c.title}<span style="color:var(--gold);display:flex">${ic('eq', 18)}</span></div></div>`).join('')}</div>
   <div class="sec"><span style="color:var(--gold);display:flex">${ic('note', 30)}</span><h2>音樂分類</h2><button class="more" data-act="tab" data-r="cats">查看更多${ic('chev', 20)}</button></div>
-  <div class="cats">${MUSIC.map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><img src="${A(c.icon)}" alt="">${c.title}</div>`).join('')}</div>`;
+  <div class="cats">${MUSICC().map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><img src="${A(c.icon + '.png')}" alt="">${c.title}</div>`).join('')}</div>
+  ${TALKC().length ? `<div class="sec"><span style="color:var(--gold);display:flex">${ic('mic', 30)}</span><h2>講話節目</h2><button class="more" data-act="cat" data-k="${TALKC()[0].key}">查看更多${ic('chev', 20)}</button></div>
+  <div class="cats">${TALKC().slice(0, 3).map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><span style="color:var(--gold);display:flex">${ic(TALK_ICON[c.key] || 'mic', 42)}</span>${c.title}</div>`).join('')}</div>` : ''}`;
 }
 
 function pageCats() {
@@ -278,8 +303,10 @@ function pageCats() {
   if (v.list) { lists.cat = v.list; body = `<div class="note">${c.title} ・ 共 ${v.list.length} 台</div><div class="list">${v.list.map((s, i) => row(s, 'cat', i)).join('')}</div>`; }
   else if (v.err) body = msg(v.err, null, 'retry-cat', '再試一次');
   else body = loading();
-  return header('音樂分類', { actions: `<button class="ibtn" data-act="open" data-r="search" aria-label="搜尋">${ic('search')}</button>` }) +
-    `<div class="pills">${ALL.map((x) => `<button class="pill ${x.key === key ? 'on' : ''}" data-act="pill" data-k="${x.key}">${x.title}</button>`).join('')}</div>${body}`;
+  const grp = nav.catGroup || c.group;
+  return header('全部分類', { actions: `<button class="ibtn" data-act="open" data-r="search" aria-label="搜尋">${ic('search')}</button>` }) +
+    `<div class="gtabs">${GROUPS.map(([g, lb, icn]) => `<button class="${g === grp ? 'on' : ''}" data-act="group" data-g="${g}">${ic(icn, 22, icn === 'note')}${lb}</button>`).join('')}</div>
+    <div class="pgrid">${inGroup(grp).map((x) => `<button class="pill ${x.key === key ? 'on' : ''}" data-act="pill" data-k="${x.key}">${x.title}</button>`).join('')}</div>${body}`;
 }
 
 function pagePlayer() {
@@ -290,7 +317,7 @@ function pagePlayer() {
   if (!s) return h + msg('還沒有選電台', '回到首頁，挑一個喜歡的電台吧', 'back', '回首頁');
   const left = pl.sleepEnd ? Math.max(0, Math.ceil((pl.sleepEnd - Date.now()) / 60000)) : 0;
   h += `<img class="pcover" src="${artOf(s)}" alt="電台封面"><div class="pname">${esc(s.name)}</div>
-    <div class="status">${statusHtml()}</div><div class="psub">${esc(subOf(s))}</div>
+    <div class="status">${statusHtml()}</div>${sourceCard(s)}
     <div class="ctrls"><button class="ibtn" style="width:64px;height:64px" data-act="prev" aria-label="上一台">${ic('prev', 34)}</button>
     <button class="ring" style="width:96px;height:96px" data-act="toggle" aria-label="${isOn() ? '暫停' : '播放'}">${ic(isOn() ? 'pause' : 'play', 48)}</button>
     <button class="ibtn" style="width:64px;height:64px" data-act="next" aria-label="下一台">${ic('next', 34)}</button></div>
@@ -302,6 +329,11 @@ function pagePlayer() {
   return h;
 }
 
+function sourceCard(s) {
+  const rows = [['radio', '電台', s.name], ['pin', '地區', placeOf(s)], ['lang', '語言', langZh(s)], ['db', '資料', sourceOf(s)], ['eq', '音質', qualityOf(s)]].filter((r) => r[2]);
+  return `<div class="src card"><div class="h">節目來源</div>${rows.map(([icn, k, v]) => `<div class="r"><span class="i">${ic(icn, 22, icn === 'eq')}</span><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')}
+    ${/^https?:\/\//.test(s.home || '') ? '<button class="web" data-act="homepage">打開電台官方網站</button>' : ''}</div>`;
+}
 function pageFav() {
   const favs = store.fav; lists.fav = favs;
   for (const id of [...state.sel]) if (!favs.some((s) => s.id === id)) state.sel.delete(id);
@@ -419,8 +451,10 @@ document.addEventListener('click', (e) => {
     case 'back': back(); break;
     case 'tab': goTab(el.dataset.r); break;
     case 'open': open(el.dataset.r); break;
-    case 'cat': nav.catKey = el.dataset.k; nav.stack = [{ r: 'cats' }]; render(true); break;
-    case 'pill': nav.catKey = el.dataset.k; render(true); break;
+    case 'cat': nav.catKey = el.dataset.k; nav.catGroup = cat(el.dataset.k).group; nav.stack = [{ r: 'cats' }]; render(true); break;
+    case 'pill': nav.catKey = el.dataset.k; render(); break;
+    case 'group': { const g = el.dataset.g; nav.catGroup = g; if (cat(nav.catKey).group !== g && inGroup(g)[0]) nav.catKey = inGroup(g)[0].key; render(); break; }
+    case 'homepage': if (pl.st && pl.st.home) window.native.openUrl(pl.st.home); break;
     case 'retry-cat': delete state.cats[nav.catKey]; delete cache[nav.catKey]; render(); break;
     case 'play': { const s = L(); if (s) { play(s, lists[el.dataset.l]); open('player'); } break; }
     case 'fav': { const s = L(); if (s) { store.toggleFav(s); render(); } break; }
@@ -484,6 +518,7 @@ setInterval(() => {
 (async () => {
   try { const v = await window.native.version(); VERSION = v.split('.').slice(0, 2).join('.'); } catch { /* 用預設 */ }
   try { state.onTop = await window.native.isOnTop(); } catch { state.onTop = false; }
+  try { CATS = JSON.parse(await window.native.catalog()).categories || []; } catch { CATS = []; }
   render(true);
   if (store.autoPlay && store.last) play(store.last, [store.last]);
 })();

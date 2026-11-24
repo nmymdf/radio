@@ -1,5 +1,5 @@
 // 網路收音機 電腦版 — 作者：ArchieKUO
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -72,6 +72,20 @@ ipcMain.handle('rb', async (_e, p) => {
   }
   throw last || new Error('無法連線');
 });
+
+const CATALOG_URL = 'https://raw.githubusercontent.com/nmymdf/radio/main/catalog.json';
+const catalogCache = () => path.join(app.getPath('userData'), 'catalog.json');
+// 分類清單：先用存好的（或內建的），背景再到 GitHub 抓最新版，下次打開生效
+ipcMain.handle('catalog', async () => {
+  let text = null;
+  try { text = fs.readFileSync(catalogCache(), 'utf8'); JSON.parse(text).categories.length; } catch { text = null; }
+  if (!text) text = fs.readFileSync(path.join(__dirname, 'app', 'catalog.json'), 'utf8');
+  fetch(CATALOG_URL, { signal: AbortSignal.timeout(10000) }).then((r) => r.text()).then((t) => {
+    try { if (JSON.parse(t).categories.length) fs.writeFileSync(catalogCache(), t); } catch { /* 內容不對就不存 */ }
+  }).catch(() => {});
+  return text;
+});
+ipcMain.handle('openUrl', (_e, u) => { if (/^https?:\/\//.test(u)) shell.openExternal(u); });
 
 ipcMain.handle('onTop', (_e, v) => { if (win) { win.setAlwaysOnTop(!!v); } return win ? win.isAlwaysOnTop() : false; });
 ipcMain.handle('isOnTop', () => (win ? win.isAlwaysOnTop() : false));

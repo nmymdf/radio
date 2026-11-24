@@ -4,4 +4,6 @@ contextBridge.exposeInMainWorld('native', {
   setOnTop: (v) => ipcRenderer.invoke('onTop', v),
   isOnTop: () => ipcRenderer.invoke('isOnTop'),
   version: () => ipcRenderer.invoke('version'),
+  catalog: () => ipcRenderer.invoke('catalog'),
+  openUrl: (u) => ipcRenderer.invoke('openUrl', u),
 });

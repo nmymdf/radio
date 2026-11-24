@@ -152,3 +152,17 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 #dialog .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 #dialog .acts button { padding: 12px 18px; border-radius: 12px; font-size: 18px; font-weight: 700; border: none; background: rgba(255,255,255,.08); }
 #dialog .acts .ok { color: var(--red); background: rgba(239,68,68,.15); }
+/* v1.2：分類分組、節目來源 */
+.gtabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 14px 16px 0; }
+.gtabs button { height: 56px; border-radius: 16px; font-size: 19px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255,255,255,.06); border: 1px solid rgba(242,200,106,.38); }
+.gtabs button.on { background: linear-gradient(180deg,#FFE8AD,#E8B65C 55%,#C78C2E); color: #1A1405; border-color: transparent; }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; padding: 14px 16px 0; }
+.pgrid .pill { padding: 0; }
+.src { margin: 14px 16px 0; border-radius: 18px; padding: 8px 16px; }
+.src .h { font-size: 17px; font-weight: 700; color: var(--gold); padding: 4px 0 2px; }
+.src .r { display: flex; align-items: center; height: 42px; gap: 10px; }
+.src .i { color: var(--gold); display: flex; }
+.src .k { width: 48px; font-size: 17px; color: var(--sub); }
+.src .v { flex: 1; min-width: 0; font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.src .web { background: none; border: none; color: var(--gold); font-size: 17px; padding: 10px 0 8px; }
+.pcover { width: 240px !important; height: 240px !important; }
