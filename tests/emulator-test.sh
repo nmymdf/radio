@@ -34,6 +34,11 @@ tapText() {
   local xy; xy=$(findText "$1" "$2")
   if [ -n "$xy" ]; then tap $xy; echo "tapText OK: $1 @ $xy"; else echo "tapText MISSING: $1"; fi
 }
+# 分隔線位置（x）
+divX() { adb shell dumpsys window windows | grep -A25 "Window{[0-9a-f]* u0 DockedStackDivider}:" | grep -o "mFrame=\[[-0-9]*,[-0-9]*\]\[[-0-9]*," | head -1 | sed 's/mFrame=\[\([-0-9]*\),[-0-9]*\]\[\([-0-9]*\),/\1 \2/' | awk '{x=int(($1+$2)/2); if (x<3) x=3; print x}'; }
+dragDiv() { local x; x=$(divX); [ -n "$x" ] && adb shell input swipe $x 360 $1 360 1500; echo "divider $x -> $1"; }
+# 金色浮動按鈕中心
+floatXY() { adb shell dumpsys window windows | grep -A25 "Window{[0-9a-f]* u0 com.archiekuo.carhome}:" | grep -o "mFrame=\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]" | head -1 | sed 's/mFrame=\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]/\1 \2 \3 \4/' | awk '{print int(($1+$3)/2), int(($2+$4)/2)}'; }
 # 在設定裡往下捲直到看到文字再點
 scrollTap() {
   for i in 1 2 3 4 5 6; do
@@ -44,8 +49,8 @@ scrollTap() {
   echo "scrollTap MISSING: $1"
 }
 
-adb shell wm size 1280x720
-adb shell wm density 160
+# 模擬器本來就是 1280x720、160dpi（不要用 wm size 強制改，會讓分割畫面的分隔線跑到邊邊）
+adb shell wm size > $OUT/size.txt; adb shell wm density >> $OUT/size.txt
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put system user_rotation 0
 adb install -r -g apks/radio.apk
@@ -188,22 +193,25 @@ sleep 4
 tap 468 618
 shot 13a-導航選單-五個按鈕 3
 tapText "分割畫面"
-shot 13b-分割畫面-一半一半 14
-adb shell dumpsys activity activities | grep -E "mResumedActivity|Stack #|mBounds|bounds=" | head -60 > $OUT/split-activity.txt || true
-adb shell dumpsys window windows | grep -E "Window #|mFrame=|mHasSurface=true" | head -80 > $OUT/split-windows.txt || true
-# 拖分隔線到 1/3、2/3
-adb shell input swipe 640 360 430 360 900
-shot 13c-分割畫面-拖到1比2 5
-adb shell input swipe 430 360 850 360 900
-shot 13d-分割畫面-拖到2比1 5
-adb shell input swipe 850 360 640 360 900
+sleep 14
+dragDiv 640
+shot 13b-分割畫面-一半一半 6
+adb shell dumpsys activity activities | grep -E "Stack #|mResumedActivity" > $OUT/split-activity.txt || true
+dragDiv 427
+shot 13c-分割畫面-桌面三分之一 6
+dragDiv 853
+shot 13d-分割畫面-桌面三分之二 6
+dragDiv 640
 sleep 3
 # 金色浮動按鈕：分割 → 導航全畫面
-tap 54 630
+XY=$(floatXY); echo "float at $XY"
+[ -n "$XY" ] && tap $XY
 shot 13e-浮動按鈕-導航全畫面 6
 # 首頁鍵 → 回到分割
 home
-shot 13f-首頁鍵-回到分割 14
+sleep 14
+dragDiv 640
+shot 13f-首頁鍵-回到分割 6
 tapText "結束分割"
 shot 13g-結束分割-回完整桌面 8
 kill $NAVLOOP 2>/dev/null
