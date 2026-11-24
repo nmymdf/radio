@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
         when (i?.getStringExtra("test_split")) {
             "toggle" -> android.util.Log.i("CarHome", "test toggle=" + com.archiekuo.carhome.split.SplitService.instance?.toggleSplit())
             "desk" -> app.testOpenSplitDesk()
+            "start" -> app.startSplit()
         }
     }
 
