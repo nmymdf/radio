@@ -39,10 +39,16 @@ private sealed interface Overlay {
     data class PickTile(val slot: Int) : Overlay
     data object PickShield : Overlay
     data object PickFm : Overlay
+    data object PickPhoto : Overlay
+    data object NavMenu : Overlay
 }
 
 @Composable
-fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () -> Unit, overlayOk: () -> Boolean) {
+fun HomeScreen(
+    app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () -> Unit,
+    onVoice: (String, (String) -> Unit) -> Unit, onPickPhoto: ((String) -> Unit) -> Unit,
+    overlayOk: () -> Boolean,
+) {
     val ctx = LocalContext.current
     val p = app.prefs
     val now = rememberNow()
@@ -74,6 +80,11 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
 
     var overlay by remember { mutableStateOf<Overlay>(Overlay.None) }
     var ytFull by remember { mutableStateOf(false) }
+    var ytActive by remember { mutableStateOf(false) }
+    val ytPhoto by p.ytPhoto.flow.collectAsStateWithLifecycle()
+    val message by app.message.collectAsStateWithLifecycle()
+    fun openYt(url: String = p.ytUrl.value) { ytActive = true; web.loadUrl(url) }
+    fun closeYt() { web.loadUrl("about:blank"); ytActive = false; ytFull = false }
     var askPassenger by remember { mutableStateOf(false) }
     var resetTiles by remember { mutableStateOf(false) }
 
@@ -84,7 +95,7 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
         when {
             overlay != Overlay.None -> overlay = Overlay.None
             ytFull -> ytFull = false
-            web.canGoBack() -> web.goBack()
+            ytActive && web.canGoBack() -> web.goBack()
         }
     }
     // 天氣：有 GPS 用 GPS，沒有就先用新店
@@ -121,7 +132,7 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
             Role.SETTINGS -> overlay = Overlay.Settings
             Role.APPS -> overlay = Overlay.Drawer
             Role.OEM -> if (!app.apps.launchOtherHome()) runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-            Role.NAV -> overlay = Overlay.PickTile(i) // 第一次讓你選導航（例如高德）
+            Role.NAV -> overlay = Overlay.NavMenu // 說目的地、回家、去公司、打開導航
             else -> {
                 val d = defaultPkg(r)
                 if (d != null) app.apps.launch(d) else overlay = Overlay.PickTile(i)
@@ -188,9 +199,13 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
                 YouTubePanel(
                     web = web,
                     modifier = if (ytFull) Modifier.fillMaxSize() else Modifier.align(Alignment.BottomEnd).width(400.dp).height(346.dp),
+                    active = ytActive, photo = ytPhoto,
                     driving = driving, restricted = ytRestrict, passenger = passenger, full = ytFull,
+                    onActivate = { openYt() }, onClose = { closeYt() },
+                    onVoice = { onVoice("說出想看的影片") { q -> openYt("https://m.youtube.com/results?search_query=" + Uri.encode(q)) } },
                     onPassenger = { askPassenger = true }, onFull = { ytFull = !ytFull },
-                    onOpenApp = { defaultPkg(Role.YOUTUBE)?.let { app.apps.launch(it) } },
+                    onChangePhoto = { overlay = Overlay.PickPhoto },
+                    onOpenApp = { val d = defaultPkg(Role.YOUTUBE); if (d != null) app.apps.launch(d) else app.say("車機上沒有 YouTube App") },
                 )
             }
             Dock(tiles, ::tap) { i -> overlay = Overlay.PickTile(i) }
@@ -220,8 +235,21 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
                 onDefaultHome = { runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } },
                 onResetTiles = { resetTiles = true },
             ) { overlay = Overlay.None }
+            Overlay.PickPhoto -> PhotoPicker(ytPhoto, onPick = { k -> p.ytPhoto.set(k); overlay = Overlay.None },
+                onUsb = { onPickPhoto { path -> p.ytPhoto.set(path); overlay = Overlay.None } }) { overlay = Overlay.None }
+            Overlay.NavMenu -> {
+                val navPkg = app.navPackage()
+                NavMenu(
+                    navPkg?.let { app.apps.find(it)?.label },
+                    onVoice = { onVoice("請說目的地") { q -> overlay = Overlay.None; app.navSearch(q) } },
+                    onHome = { overlay = Overlay.None; app.navHome(false) },
+                    onWork = { overlay = Overlay.None; app.navHome(true) },
+                    onOpen = { if (navPkg != null) { overlay = Overlay.None; app.apps.launch(navPkg) } else overlay = Overlay.PickTile(2) },
+                ) { overlay = Overlay.None }
+            }
             Overlay.None -> {}
         }
+        MessageBanner(message, Modifier.align(Alignment.TopCenter).padding(top = 70.dp))
 
         if (askPassenger) ConfirmBox("副駕駛觀看", "確定由副駕駛觀看影片嗎？\n駕駛請專心開車。這一趟有效，下次發動車子會恢復。", "由副駕駛觀看",
             onOk = { app.passengerMode.value = true; askPassenger = false }, onCancel = { askPassenger = false })

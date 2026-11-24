@@ -43,6 +43,8 @@ class Prefs(ctx: Context) {
     val hideStatus = BoolPref("hideStatus", true)
     /** 播放卡目前的模式：radio、local、fm */
     val mode = StrPref("mode", "radio")
+    /** YouTube 平常顯示的照片：lake、cafe、taipei、zen、black，或 file:路徑 */
+    val ytPhoto = StrPref("ytPhoto", "lake")
     /** YouTube 上次的網址 */
     val ytUrl = StrPref("ytUrl", "https://m.youtube.com")
 

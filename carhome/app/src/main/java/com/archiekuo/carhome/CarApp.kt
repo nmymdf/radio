@@ -35,6 +35,15 @@ class CarApp : Application() {
     val viz = VisualizerEngine()
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    /** 畫面上方的大字提示（3 秒後消失） */
+    val message = MutableStateFlow<String?>(null)
+    private var messageJob: Job? = null
+    fun say(text: String) {
+        message.value = text
+        messageJob?.cancel()
+        messageJob = scope.launch { delay(3500); message.value = null }
+    }
+
     /** 副駕駛觀看：這一趟有效，下次發動恢復 */
     val passengerMode = MutableStateFlow(false)
     /** 沒網路時自動切到 FM 的狀態 */
@@ -106,6 +115,65 @@ class CarApp : Application() {
     fun fmPackage(): String? =
         prefs.fmPkg.value.takeIf { it.isNotBlank() && apps.isInstalled(it) }
             ?: apps.findByLabel("收音機", "收音机", "Radio", "FM")?.pkg?.takeIf { it != RadioRemote.PKG }
+
+    // ---- 高德導航 ----
+    private val amapAuto = listOf("com.autonavi.amapauto", "com.autonavi.amapautolite", "com.autonavi.amapauto.gongban")
+    fun navPackage(): String? =
+        prefs.tile(2).value.takeIf { it.isNotBlank() && apps.isInstalled(it) }
+            ?: apps.findByPackages(*(amapAuto + listOf("com.autonavi.minimap", "com.google.android.apps.maps")).toTypedArray())?.pkg
+            ?: apps.findByLabel("高德", "导航", "導航", "地圖", "地图")?.pkg
+
+    private fun isAmapAuto(pkg: String) = pkg in amapAuto || (pkg.startsWith("com.autonavi") && pkg.contains("auto"))
+
+    /** 高德車機版的公開接收方式 */
+    private fun amapBroadcast(pkg: String, type: Int, fill: Intent.() -> Unit) {
+        val i = Intent("AUTONAVI_STANDARD_BROADCAST_RECV").setPackage(pkg)
+            .putExtra("KEY_TYPE", type).putExtra("SOURCE_APP", "CarHome")
+        i.fill()
+        sendBroadcast(i)
+    }
+
+    /** 把關鍵字交給高德搜尋 */
+    fun navSearch(keyword: String) {
+        val pkg = navPackage() ?: run { say("找不到導航 App，請長按「導航」方塊選擇"); return }
+        when {
+            isAmapAuto(pkg) -> {
+                apps.launch(pkg)
+                scope.launch {
+                    delay(1800)
+                    amapBroadcast(pkg, 10036) { putExtra("KEYWORDS", keyword) }
+                }
+                say("已交給高德搜尋：$keyword")
+            }
+            pkg == "com.autonavi.minimap" -> {
+                val uri = android.net.Uri.parse("androidamap://poi?sourceApplication=CarHome&keywords=" + android.net.Uri.encode(keyword) + "&dev=0")
+                val ok = runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); true }.getOrDefault(false)
+                say(if (ok) "已交給高德搜尋：$keyword" else "高德沒有回應，請直接在高德裡搜尋")
+            }
+            pkg == "com.google.android.apps.maps" -> {
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q=" + android.net.Uri.encode(keyword))).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                say("已交給地圖搜尋：$keyword")
+            }
+            else -> { apps.launch(pkg); say("這個導航 App 不接受語音，已幫你打開") }
+        }
+    }
+
+    /** 回家（0）或去公司（1） */
+    fun navHome(company: Boolean) {
+        val pkg = navPackage() ?: run { say("找不到導航 App，請長按「導航」方塊選擇"); return }
+        val name = if (company) "公司" else "家"
+        if (isAmapAuto(pkg)) {
+            apps.launch(pkg)
+            scope.launch {
+                delay(1800)
+                amapBroadcast(pkg, 10040) { putExtra("DEST", if (company) 1 else 0); putExtra("EXTRA_DEST", if (company) 1 else 0); putExtra("IS_START_NAVI", 0) }
+            }
+            say("請高德導航到$name")
+        } else {
+            apps.launch(pkg)
+            say("已打開導航，請在裡面按「回$name」")
+        }
+    }
 
     fun bringHome() {
         val i = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)

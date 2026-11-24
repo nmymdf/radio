@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.speech.RecognizerIntent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,7 +65,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        val w = createYouTubeWebView(this, app.prefs.ytUrl.value) { app.prefs.ytUrl.set(it) }
+        val w = createYouTubeWebView(this) { app.prefs.ytUrl.set(it) }
         web = w
         lifecycleScope.launch { app.prefs.hideStatus.flow.collectLatest { applyBars(it) } }
 
@@ -77,12 +80,57 @@ class MainActivity : ComponentActivity() {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
                         Box(Modifier.requiredSize(1280.dp, 720.dp)) {
-                            HomeScreen(app, w, homeTick, ::askPermissions) { Settings.canDrawOverlays(this@MainActivity) }
+                            HomeScreen(app, w, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
                         }
                     }
                 }
             }
         }
+    }
+
+    // ---- 語音辨識（YouTube 語音搜尋、說目的地） ----
+    private var voiceCallback: ((String) -> Unit)? = null
+    private val voiceLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        val text = r.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
+        val cb = voiceCallback
+        voiceCallback = null
+        if (!text.isNullOrBlank()) cb?.invoke(text) else app.say("沒有聽到，請再說一次")
+    }
+
+    fun startVoice(prompt: String, onResult: (String) -> Unit) {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-TW")
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "zh-TW")
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
+            .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+        val ok = packageManager.queryIntentActivities(intent, 0).isNotEmpty()
+        if (!ok) { app.say("這台車機沒有語音辨識服務，請改用打字"); return }
+        voiceCallback = onResult
+        runCatching { voiceLauncher.launch(intent) }.onFailure { voiceCallback = null; app.say("語音辨識打不開，請改用打字") }
+    }
+
+    // ---- 從隨身碟選照片（複製一份到桌面裡，之後拔掉隨身碟也還在） ----
+    private var photoCallback: ((String) -> Unit)? = null
+    private val photoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        val uri = r.data?.data ?: return@registerForActivityResult
+        lifecycleScope.launch {
+            val path = withContext(Dispatchers.IO) {
+                runCatching {
+                    val f = java.io.File(filesDir, "yt_photo_${System.currentTimeMillis()}.jpg")
+                    contentResolver.openInputStream(uri)?.use { input -> f.outputStream().use { input.copyTo(it) } }
+                    filesDir.listFiles()?.filter { it.name.startsWith("yt_photo_") && it != f }?.forEach { it.delete() }
+                    f.absolutePath
+                }.getOrNull()
+            }
+            if (path != null) photoCallback?.invoke("file:$path") else app.say("照片讀取失敗")
+        }
+    }
+
+    fun pickPhoto(onPicked: (String) -> Unit) {
+        photoCallback = onPicked
+        val i = Intent(Intent.ACTION_GET_CONTENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE)
+        runCatching { photoLauncher.launch(Intent.createChooser(i, "選一張照片")) }.onFailure { app.say("這台車機沒有選照片的功能") }
     }
 
     private fun applyBars(hide: Boolean) {

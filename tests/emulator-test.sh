@@ -1,6 +1,6 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 v0.2
+# 測試 v0.3
 set -x
 OUT=results
 mkdir -p $OUT
@@ -72,11 +72,24 @@ adb shell input swipe 461 618 461 618 1200
 shot 11-長按方塊-選App 3
 adb shell input keyevent 4
 
-# YouTube 放大
+# YouTube：平常是照片 → 點照片開啟 → 放大 → 縮小 → 關閉
+shot 12a-YouTube-平常照片 2
+tap 1046 370
+shot 12b-YouTube-開啟 12
 tap 954 502
-shot 12-YouTube-放大 12
-tap 954 502
+shot 12c-YouTube-放大 6
+tap 340 502
 sleep 2
+tap 1137 502
+shot 12d-YouTube-關閉回照片 3
+# 更換照片
+tap 954 502
+shot 12e-更換照片 3
+adb shell input keyevent 4
+# 導航四大按鈕（第 3 個方塊）
+tap 468 618
+shot 12f-導航選單 3
+adb shell input keyevent 4
 
 # 網路收音機 App（直式）
 adb shell am start -n com.archiekuo.radio/.MainActivity

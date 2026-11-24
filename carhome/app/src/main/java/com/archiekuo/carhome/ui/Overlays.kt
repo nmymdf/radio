@@ -179,3 +179,77 @@ fun ConfirmBox(title: String, text: String, ok: String, onOk: () -> Unit, onCanc
         dismissButton = { TextButton(onClick = onCancel) { Text("取消", fontSize = 22.sp, color = Color.White) } },
     )
 }
+
+/** 選 YouTube 平常顯示的照片 */
+@Composable
+fun PhotoPicker(current: String, onPick: (String) -> Unit, onUsb: () -> Unit, onBack: () -> Unit) {
+    PanelFrame("YouTube 平常顯示的照片", onBack) {
+        val items = ytPhotos.map { it.first to it.second } + listOf("black" to "全黑", "usb" to "從隨身碟選照片")
+        LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(18.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            items(items, key = { it.first }) { (k, label) ->
+                val on = k == current || (k == "usb" && current.startsWith("file:"))
+                Column(
+                    Modifier.height(250.dp).card(RoundedCornerShape(20.dp), alpha = if (on) 1f else 0.38f)
+                        .clickable { if (k == "usb") onUsb() else onPick(k) }.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(14.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
+                        when {
+                            k == "usb" && current.startsWith("file:") -> YtPhoto(current, Modifier.fillMaxSize())
+                            k == "usb" -> Icon(Icons.Rounded.Usb, null, tint = C.Gold, modifier = Modifier.size(64.dp))
+                            else -> YtPhoto(k, Modifier.fillMaxSize())
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (on) { Icon(Icons.Rounded.CheckCircle, null, tint = C.Gold, modifier = Modifier.size(26.dp)); Spacer(Modifier.width(6.dp)) }
+                        Text(label, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = if (on) C.Gold else Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 點「導航」方塊：說目的地、回家、去公司、打開導航 */
+@Composable
+fun NavMenu(appLabel: String?, onVoice: () -> Unit, onHome: () -> Unit, onWork: () -> Unit, onOpen: () -> Unit, onBack: () -> Unit) {
+    PanelFrame("導航 ・ ${appLabel ?: "尚未選擇導航 App"}", onBack) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 40.dp), verticalArrangement = Arrangement.Center) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                BigNavButton(Icons.Rounded.Mic, "說目的地", "說完自動在導航搜尋", true, onVoice)
+                BigNavButton(Icons.Rounded.Home, "回家", "一鍵開始導航", false, onHome)
+                BigNavButton(Icons.Rounded.Work, "去公司", "一鍵開始導航", false, onWork)
+                BigNavButton(Icons.Rounded.Map, "打開導航", appLabel ?: "選擇導航 App", false, onOpen)
+            }
+            Spacer(Modifier.height(28.dp))
+            Text("「回家」、「去公司」請先在導航 App 裡設好地址 ・ 長按「導航」方塊可以更換導航 App", fontSize = 19.sp, color = C.Sub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+/** 畫面上方的大字提示 */
+@Composable
+fun MessageBanner(text: String?, modifier: Modifier) {
+    if (text == null) return
+    Box(modifier.clip(RoundedCornerShape(30.dp)).background(Color(0xF0101838)).border(1.5.dp, C.Gold, RoundedCornerShape(30.dp)).padding(horizontal = 30.dp, vertical = 14.dp)) {
+        Text(text, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+    }
+}
+
+@Composable
+private fun RowScope.BigNavButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, sub: String, primary: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(26.dp)
+    Column(
+        Modifier.weight(1f).height(230.dp)
+            .then(if (primary) Modifier.clip(shape).background(GoldBrush) else Modifier.card(shape, alpha = 0.45f))
+            .clickable(role = SRole.Button, onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(icon, null, tint = if (primary) C.Ink else C.Gold, modifier = Modifier.size(76.dp))
+        Spacer(Modifier.height(14.dp))
+        Text(label, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = if (primary) C.Ink else Color.White)
+        Spacer(Modifier.height(6.dp))
+        Text(sub, fontSize = 17.sp, color = if (primary) C.Ink.copy(alpha = 0.75f) else C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 8.dp))
+    }
+}
