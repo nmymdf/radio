@@ -65,6 +65,10 @@ adb push test-song.mp3 /sdcard/Music/test-song.mp3
 adb push test-song2.mp3 /sdcard/Music/台語老歌/test-song2.mp3
 adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Music/test-song.mp3 || true
 
+# 診斷：直接查天氣服務，看回應
+curl -s -m 20 "https://api.open-meteo.com/v1/forecast?latitude=24.9676&longitude=121.5419&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7" | head -c 3000 > $OUT/weather-api.txt
+curl -s -m 20 "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=24.9676&longitude=121.5419&current=us_aqi,pm2_5&timezone=auto" | head -c 1000 > $OUT/air-api.txt
+
 # 新店的位置
 adb emu geo fix 121.5419 24.9676
 adb logcat -c
@@ -119,7 +123,7 @@ tap 492 234
 shot 07a-內部音樂-全畫面 4
 tapText "全部歌曲"
 shot 07b-全部歌曲 2
-tapText "第二首老歌"
+tapText "test-song2"
 shot 07c-點歌播放 5
 tapText "最近播放"
 shot 07d-最近播放 2
@@ -147,6 +151,12 @@ tapText "放到下方方塊"
 shot 09d-選方塊 2
 tapText "第 7 個" prefix
 shot 09e-已放到方塊 2
+hold 124 169
+shot 09g-系統App選單 2
+tapText "App 資訊"
+shot 09h-App資訊 4
+back
+sleep 2
 back
 shot 09f-桌面方塊換了 3
 
@@ -179,7 +189,8 @@ tap 468 618
 shot 13a-導航選單-五個按鈕 3
 tapText "分割畫面"
 shot 13b-分割畫面-一半一半 14
-adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity|Stack #|windowingMode" | head -40 > $OUT/split-activity.txt || true
+adb shell dumpsys activity activities | grep -E "mResumedActivity|Stack #|mBounds|bounds=" | head -60 > $OUT/split-activity.txt || true
+adb shell dumpsys window windows | grep -E "Window #|mFrame=|mHasSurface=true" | head -80 > $OUT/split-windows.txt || true
 # 拖分隔線到 1/3、2/3
 adb shell input swipe 640 360 430 360 900
 shot 13c-分割畫面-拖到1比2 5
@@ -199,6 +210,6 @@ kill $NAVLOOP 2>/dev/null
 
 # 記錄
 adb logcat -d -b crash > $OUT/crash-log.txt || true
-adb logcat -d | grep -E "AndroidRuntime|FATAL|carhome|archiekuo|ActivityTaskManager.*split|Divider" | tail -400 > $OUT/app-log.txt || true
+adb logcat -d | grep -E "AndroidRuntime|FATAL|carhome|archiekuo|CarHome|ActivityTaskManager.*split|Divider" | tail -400 > $OUT/app-log.txt || true
 adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > $OUT/activity.txt || true
 echo done
