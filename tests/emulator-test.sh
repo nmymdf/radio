@@ -141,7 +141,7 @@ shot 08b-回桌面 4
 # ---- 3. 所有 App：搜尋、長按選單、放到方塊 ----
 tap 998 618
 shot 09a-所有App 4
-tapText "搜尋 App"
+tap 850 61
 sleep 1
 adb shell input text "set"
 shot 09b-搜尋set 3

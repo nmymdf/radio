@@ -34,7 +34,7 @@ jobs:
           arch: x86_64
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -skin 1280x720
-          script: bash tests/emulator-test.sh
+          script: bash tests/$(cat tests/RUN.txt 2>/dev/null || echo emulator-test.sh)
       - name: Publish results
         if: always()
         run: |
