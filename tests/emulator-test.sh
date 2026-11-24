@@ -1,6 +1,6 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 v0.3（第二次）
+# 測試 收音機 v1.4 車機版
 set -x
 OUT=results
 mkdir -p $OUT
@@ -10,7 +10,7 @@ tap() { adb shell input tap $1 $2; }
 adb shell wm size 1280x720
 adb shell wm density 160
 adb shell settings put system accelerometer_rotation 0
-adb shell settings put system user_rotation 1
+adb shell settings put system user_rotation 0
 adb install -r -g apks/radio.apk
 adb install -r -g apks/carhome.apk
 for p in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION RECORD_AUDIO READ_EXTERNAL_STORAGE; do
@@ -91,12 +91,22 @@ tap 468 618
 shot 12f-導航選單 3
 adb shell input keyevent 4
 
-# 網路收音機 App（直式）
+# 網路收音機 App（車機版橫式）
 adb shell am start -n com.archiekuo.radio/.MainActivity
-shot 13-網路收音機 15
-# 按收音機首頁的「開始播放」（直式畫面 720x1280）
-tap 110 376
-shot 13b-收音機播放頁 20
+shot 13-收音機車機版-首頁 15
+# 點右邊第一個方塊（古典音樂）
+tap 743 160
+shot 13a-收音機車機版-分類 12
+adb shell input swipe 950 600 950 150 500
+sleep 2
+adb shell input swipe 950 600 950 250 500
+sleep 2
+tap 950 420
+shot 13b-收音機車機版-播放中 20
+tap 72 360
+shot 13c-收音機車機版-收藏頁 4
+tap 72 600
+shot 13d-收音機車機版-我的 4
 adb shell input keyevent 3
 sleep 3
 # 回到車機桌面，切到「網路收音機」分頁

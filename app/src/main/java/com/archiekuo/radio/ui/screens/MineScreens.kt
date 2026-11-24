@@ -245,6 +245,16 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             Divider()
             SwitchRow("只用 Wi‑Fi 播放", "關閉時，用行動網路也能收聽", wifi, vm::setWifiOnly)
         }
+        val mode by vm.screenMode.collectAsStateWithLifecycle()
+        val activity = androidx.compose.ui.platform.LocalContext.current as? android.app.Activity
+        CardGroup("畫面模式") {
+            Text("自動：手機用直式，橫的車機螢幕用車機版", fontSize = 16.sp, color = RC.Sub, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
+            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf("auto" to "自動", "phone" to "手機直式", "car" to "車機橫式").forEach { (k, label) ->
+                    com.archiekuo.radio.ui.components.Pill(label, mode == k, { if (mode != k) { vm.setScreenMode(k); activity?.recreate() } }, Modifier.weight(1f), hPad = 0.dp)
+                }
+            }
+        }
         AboutCard()
         Spacer(Modifier.height(20.dp))
     }

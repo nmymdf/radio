@@ -102,4 +102,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun clearHistory() = store.clearHistory()
     fun setWifiOnly(b: Boolean) = store.setWifiOnly(b)
     fun setAutoPlay(b: Boolean) = store.setAutoPlay(b)
+    val screenMode = store.screenMode
+    fun setScreenMode(m: String) = store.setScreenMode(m)
 }

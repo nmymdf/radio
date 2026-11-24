@@ -105,5 +105,10 @@ class LocalStore(ctx: Context) {
     }
 
     fun setWifiOnly(b: Boolean) { _wifiOnly.value = b; p.edit().putBoolean("wifiOnly", b).apply() }
+    /** 畫面模式：auto 自動判斷、phone 手機直式、car 車機橫式 */
+    private val _screenMode = MutableStateFlow(p.getString("screenMode", "auto") ?: "auto")
+    val screenMode: StateFlow<String> = _screenMode.asStateFlow()
+    fun setScreenMode(m: String) { _screenMode.value = m; p.edit().putString("screenMode", m).commit() }
+
     fun setAutoPlay(b: Boolean) { _autoPlay.value = b; p.edit().putBoolean("autoPlay", b).apply() }
 }
