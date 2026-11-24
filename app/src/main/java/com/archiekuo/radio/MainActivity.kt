@@ -47,6 +47,12 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
+        if (car) {
+            // 車機版：藏起系統狀態列，畫面更乾淨（從上方往下滑可以叫出來）
+            val c = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+            c.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            c.hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        }
         app.player.connect()
         if (savedInstanceState == null && app.store.autoPlay.value) app.player.autoResume()
         setContent {

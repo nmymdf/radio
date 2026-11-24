@@ -214,13 +214,15 @@ private fun BigButton(text: String, icon: ImageVector, on: Boolean, modifier: Mo
 @Composable
 private fun CarHome(onCategory: (String) -> Unit) {
     val sections = listOf("熱門電台" to Categories.hotStations, "音樂分類" to Categories.music, "講話節目" to Categories.talkHome)
-    LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyVerticalGrid(GridCells.Fixed(12), Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         sections.forEach { (title, list) ->
             if (list.isEmpty()) return@forEach
-            item(span = { GridItemSpan(3) }) {
+            item(span = { GridItemSpan(12) }) {
                 Text(title, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 4.dp, start = 4.dp))
             }
-            items(list, key = { "${title}-${it.key}" }) { c -> CarTile(c, title == "講話節目") { onCategory(c.key) } }
+            // 熱門電台一排 4 個，其他一排 3 個，排列整齊
+            val span = if (list.size % 4 == 0 && list.size % 3 != 0) 3 else 4
+            items(list, key = { "${title}-${it.key}" }, span = { GridItemSpan(span) }) { c -> CarTile(c, title == "講話節目") { onCategory(c.key) } }
         }
     }
 }

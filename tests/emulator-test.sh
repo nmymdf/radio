@@ -1,6 +1,6 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 收音機 v1.4 車機版（建置後）
+# 測試 收音機 v1.4 車機版（建置後 2）
 set -x
 OUT=results
 mkdir -p $OUT
