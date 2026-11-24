@@ -68,7 +68,7 @@ private fun StatusDot(color: Color, text: String, textColor: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(11.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(8.dp))
-        Text(text, fontSize = 19.sp, color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, fontSize = 19.sp, color = textColor, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 25.sp)
     }
 }
 

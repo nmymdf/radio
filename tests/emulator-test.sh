@@ -72,16 +72,27 @@ shot 11-長按方塊-選App 3
 adb shell input keyevent 4
 
 # YouTube 放大
-tap 1036 532
-shot 12-YouTube-放大 15
-tap 1036 532
+tap 954 502
+shot 12-YouTube-放大 12
+tap 954 502
 sleep 2
 
 # 網路收音機 App（直式）
 adb shell am start -n com.archiekuo.radio/.MainActivity
 shot 13-網路收音機 15
+# 按收音機首頁的「開始播放」（直式畫面 720x1280）
+tap 110 376
+shot 13b-收音機播放頁 20
 adb shell input keyevent 3
-shot 14-按首頁鍵回桌面 4
+sleep 3
+# 回到車機桌面，切到「網路收音機」分頁
+tap 490 121
+shot 14-桌面控制收音機 15
+# 用桌面的暫停鍵
+tap 620 376
+shot 15-桌面暫停收音機 5
+tap 620 376
+shot 16-桌面再播放 12
 
 # 記錄
 adb logcat -d -b crash > $OUT/crash-log.txt || true

@@ -16,8 +16,8 @@ jobs:
         run: |
           mkdir apks
           git fetch --depth 1 origin apk apk-car
-          git show origin/apk:radio-v1.3.apk > apks/radio.apk
-          git show origin/apk-car:carhome-v0.1.apk > apks/carhome.apk
+          git show origin/apk:$(git ls-tree --name-only origin/apk | grep "\.apk$") > apks/radio.apk
+          git show origin/apk-car:$(git ls-tree --name-only origin/apk-car | grep "\.apk$") > apks/carhome.apk
           ls -la apks
       - name: Enable KVM
         run: |

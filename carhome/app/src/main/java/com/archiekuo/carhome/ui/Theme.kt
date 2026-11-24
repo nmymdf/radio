@@ -59,7 +59,7 @@ val NavyCard = Brush.verticalGradient(listOf(Color(0xEB202A60), Color(0xEB141C48
 val BlackCard = Brush.verticalGradient(listOf(Color(0xF0161616), Color(0xF00A0A0A)))
 fun cardBrush(): Brush = if (Look.black) BlackCard else NavyCard
 fun tileBrush(): Brush = if (Look.black) Brush.verticalGradient(listOf(Color(0x99181818), Color(0x990A0A0A))) else Brush.verticalGradient(listOf(Color(0x8C1C2558), Color(0x8C0E163E)))
-fun panelColor(): Color = if (Look.black) Color(0xF7000000) else Color(0xF5070C26)
+fun panelColor(): Color = if (Look.black) Color(0xFF000000) else Color(0xFF080D2A)
 
 @Composable
 fun CarTheme(content: @Composable () -> Unit) {
