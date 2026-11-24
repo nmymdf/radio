@@ -49,7 +49,7 @@ fun NavCard(g: NavGuide, modifier: Modifier, compact: Boolean = false, tiny: Boo
     val (d, u) = distText(g.segDist)
     val arrow = if (compact) 64 else 96
     Row(
-        modifier.card().clickable(onClick = onClick).padding(horizontal = if (compact) 14.dp else 18.dp, vertical = 10.dp),
+        modifier.card().clickable(onClick = onClick).padding(horizontal = if (compact) 14.dp else 18.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 18.dp),
     ) {
         Box(Modifier.size(arrow.dp).clip(RoundedCornerShape(if (compact) 16.dp else 20.dp)).background(GoldBrush), contentAlignment = Alignment.Center) {
@@ -57,12 +57,12 @@ fun NavCard(g: NavGuide, modifier: Modifier, compact: Boolean = false, tiny: Boo
         }
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(d, fontSize = (if (compact) 36 else 44).sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = (if (compact) 38 else 46).sp, maxLines = 1)
-                Text(" $u", fontSize = (if (compact) 20 else 24).sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
+                Text(d, fontSize = (if (compact) 36 else 40).sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = (if (compact) 38 else 42).sp, maxLines = 1)
+                Text(" $u", fontSize = (if (compact) 20 else 22).sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
             }
-            Text(g.actionLine, fontSize = (if (compact) 19 else 21).sp, fontWeight = FontWeight.Bold, color = C.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+            Text(g.actionLine, fontSize = (if (compact) 19 else 20).sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold, color = C.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
             val rest = if (tiny) remainText(g, twoLines = true).substringBefore('\n') else remainText(g, twoLines = compact)
-            if (rest.isNotEmpty()) Text(rest, fontSize = (if (compact) 15 else 17).sp, color = C.Sub, maxLines = if (compact) 2 else 1, lineHeight = (if (compact) 19 else 22).sp, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+            if (rest.isNotEmpty()) Text(rest, fontSize = (if (compact) 15 else 16).sp, color = C.Sub, maxLines = if (compact) 2 else 1, lineHeight = (if (compact) 19 else 21).sp, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
         }
     }
 }
