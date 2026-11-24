@@ -78,7 +78,7 @@ class WeatherRepo {
                     min = first("temperature_2m_min")?.let { Math.round(it).toInt() },
                     rain = first("precipitation_probability_max")?.let { Math.round(it).toInt() },
                 )
-            }.onFailure { lastTime = now - 25 * 60_000L }
+            }.onFailure { lastTime = now - 29 * 60_000L }
         }
     }
 }

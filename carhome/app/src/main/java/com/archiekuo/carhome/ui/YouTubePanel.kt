@@ -58,7 +58,7 @@ fun YouTubePanel(
     onOpenApp: () -> Unit,
 ) {
     val hideVideo = driving && restricted && !passenger
-    Column(modifier.card(RoundedCornerShape(24.dp)).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier.card(RoundedCornerShape(24.dp), if (full) androidx.compose.ui.graphics.SolidColor(panelColor()) else cardBrush()).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth().height(28.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.SmartDisplay, null, tint = C.Gold, modifier = Modifier.size(26.dp))
             Spacer(Modifier.width(8.dp))
