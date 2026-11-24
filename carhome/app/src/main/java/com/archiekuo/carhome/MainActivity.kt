@@ -49,7 +49,11 @@ class MainActivity : ComponentActivity() {
 
     fun askPermissions() { permLauncher.launch(neededPermissions()) }
 
+    private var firstDone = false
+
     private fun onPermissionsResult() {
+        // 第一次（權限問完後）才執行發動後的動作，避免神盾蓋住權限詢問
+        if (!firstDone) { firstDone = true; app.onFirstLaunch() }
         if (granted(Manifest.permission.ACCESS_FINE_LOCATION) || granted(Manifest.permission.ACCESS_COARSE_LOCATION)) app.location.start()
         if (granted(Manifest.permission.RECORD_AUDIO) && app.prefs.viz.value) app.viz.start()
     }
@@ -62,7 +66,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch { app.prefs.hideStatus.flow.collectLatest { applyBars(it) } }
 
         if (neededPermissions().any { !granted(it) }) askPermissions() else onPermissionsResult()
-        app.onFirstLaunch()
 
         setContent {
             CarTheme {
@@ -98,7 +101,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         app.radio.connect()
         lifecycleScope.launch { app.apps.refresh() }
-        onPermissionsResult()
+        if (firstDone) onPermissionsResult()
         web?.onResume()
         applyBars(app.prefs.hideStatus.value)
     }

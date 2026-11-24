@@ -42,6 +42,8 @@ class CarApp : Application() {
     private var offlineJob: Job? = null
     private var screenOffAt = 0L
     private var ignitionDone = false
+    /** 剛發動時手機熱點還在連線，這段時間不要急著切 FM */
+    private var ignitionAt = SystemClock.elapsedRealtime()
 
     override fun onCreate() {
         super.onCreate()
@@ -75,6 +77,7 @@ class CarApp : Application() {
     /** 發動車子：自動播收音機、自動開神盾 */
     fun onIgnition() {
         passengerMode.value = false
+        ignitionAt = SystemClock.elapsedRealtime()
         scope.launch {
             apps.refresh()
             if (prefs.autoShield.value) {
@@ -117,6 +120,8 @@ class CarApp : Application() {
                 if (!online) {
                     offlineJob = scope.launch {
                         delay(10_000)
+                        val wait = 45_000 - (SystemClock.elapsedRealtime() - ignitionAt)
+                        if (wait > 0) delay(wait)
                         if (!net.online.value && prefs.autoFm.value && prefs.mode.value == "radio") {
                             val fm = fmPackage() ?: return@launch
                             radio.pause()

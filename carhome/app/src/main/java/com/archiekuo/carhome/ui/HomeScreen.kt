@@ -77,7 +77,8 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
 
     // 按車機的「首頁」鍵：關掉所有面板
     LaunchedEffect(homeTick) { if (homeTick > 0) { overlay = Overlay.None; ytFull = false } }
-    BackHandler(enabled = overlay != Overlay.None || ytFull || web.canGoBack()) {
+    // 桌面本身不能被「返回」關掉
+    BackHandler(enabled = true) {
         when {
             overlay != Overlay.None -> overlay = Overlay.None
             ytFull -> ytFull = false
@@ -149,7 +150,10 @@ fun HomeScreen(app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () ->
                     }
                     PlayerCard(
                         mode = mode, radio = radio, local = local, fmLabel = fmApp()?.label, autoFm = autoFm,
-                        onMode = { app.switchMode(it); if (it == "fm") fmApp()?.let { a -> app.apps.launch(a.pkg) } },
+                        onMode = { m ->
+                            app.switchMode(m)
+                            if (m == "fm") { val a = fmApp(); if (a != null) app.apps.launch(a.pkg) else overlay = Overlay.PickFm }
+                        },
                         onRadioToggle = app.radio::toggle, onRadioPrev = app.radio::previous, onRadioNext = app.radio::next,
                         onOpenRadioApp = { app.apps.launch(RadioRemote.PKG) },
                         onLocalToggle = app.local::toggle, onLocalPrev = app.local::previous, onLocalNext = app.local::next,
