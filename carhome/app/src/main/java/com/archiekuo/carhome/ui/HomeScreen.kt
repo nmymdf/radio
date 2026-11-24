@@ -3,7 +3,6 @@ package com.archiekuo.carhome.ui
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import android.webkit.WebView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archiekuo.carhome.CarApp
 import com.archiekuo.carhome.data.SystemInfo
 import com.archiekuo.carhome.media.RadioRemote
-import com.archiekuo.carhome.split.SplitService
 import kotlin.random.Random
 
 private sealed interface Overlay {
@@ -52,12 +50,12 @@ private object Layout {
     const val TOP = 16 + 44 + 14 // 上方留白＋上方列＋間距
     const val MID_H = 470
     const val SIDE_W = 400
-    const val YT_H = 346
+    const val NAV_H = 124
 }
 
 @Composable
 fun HomeScreen(
-    app: CarApp, web: WebView, homeTick: Int, onAskPermissions: () -> Unit,
+    app: CarApp, homeTick: Int, onAskPermissions: () -> Unit,
     onVoice: (String, (String) -> Unit) -> Unit, onPickPhoto: ((String) -> Unit) -> Unit,
     overlayOk: () -> Boolean,
 ) {
@@ -70,17 +68,13 @@ fun HomeScreen(
     val road by app.location.road.collectAsStateWithLifecycle()
     val roadStale by app.location.roadStale.collectAsStateWithLifecycle()
     val district by app.location.district.collectAsStateWithLifecycle()
-    val driving by app.location.driving.collectAsStateWithLifecycle()
     val weather by app.weather.weather.collectAsStateWithLifecycle()
     val radio by app.radio.state.collectAsStateWithLifecycle()
     val local by app.local.state.collectAsStateWithLifecycle()
     val library by app.local.library.collectAsStateWithLifecycle()
     val recent by app.local.recent.collectAsStateWithLifecycle()
     val apps by app.apps.apps.collectAsStateWithLifecycle()
-    val passenger by app.passengerMode.collectAsStateWithLifecycle()
     val guide by app.nav.guide.collectAsStateWithLifecycle()
-    val splitOn by SplitService.running.collectAsStateWithLifecycle()
-    val ytRequest by app.ytRequest.collectAsStateWithLifecycle()
     val mode by p.mode.flow.collectAsStateWithLifecycle()
     val autoFm by p.autoFm.flow.collectAsStateWithLifecycle()
     val ytRestrict by p.ytRestrict.flow.collectAsStateWithLifecycle()
@@ -92,41 +86,23 @@ fun HomeScreen(
     val black by p.black.flow.collectAsStateWithLifecycle()
     val circleMode by p.circleMode.flow.collectAsStateWithLifecycle()
     val shieldLeft by p.shieldLeft.flow.collectAsStateWithLifecycle()
-    Look.black = black
     val shieldPkg by p.shieldPkg.flow.collectAsStateWithLifecycle()
     val fmPkg by p.fmPkg.flow.collectAsStateWithLifecycle()
     val tilePkgs = (0 until 7).map { i -> p.tile(i).flow.collectAsStateWithLifecycle().value }
 
     var overlay by remember { mutableStateOf<Overlay>(Overlay.None) }
-    var ytFull by remember { mutableStateOf(false) }
-    var ytActive by remember { mutableStateOf(false) }
     val ytPhoto by p.ytPhoto.flow.collectAsStateWithLifecycle()
     val message by app.message.collectAsStateWithLifecycle()
-    fun openYt(url: String = p.ytUrl.value) { ytActive = true; web.loadUrl(url) }
-    fun closeYt() { web.loadUrl("about:blank"); ytActive = false; ytFull = false }
-    var askPassenger by remember { mutableStateOf(false) }
     var resetTiles by remember { mutableStateOf(false) }
 
     // 按車機的「首頁」鍵：關掉所有面板、YouTube 縮回小畫面（繼續播）
-    LaunchedEffect(homeTick) { if (homeTick > 0) { overlay = Overlay.None; ytFull = false } }
-    // 分割畫面的 YouTube 方塊：打開全畫面 YouTube
-    var ytHandled by remember { mutableIntStateOf(app.ytRequest.value) }
-    LaunchedEffect(ytRequest) {
-        if (ytRequest > ytHandled) {
-            ytHandled = ytRequest
-            overlay = Overlay.None
-            if (!ytActive) openYt()
-            ytFull = true
-        }
-    }
+    LaunchedEffect(homeTick) { if (homeTick > 0) overlay = Overlay.None }
     // 桌面本身不能被「返回」關掉
     BackHandler(enabled = true) {
         when {
             overlay == Overlay.Background -> overlay = Overlay.Settings
             overlay is Overlay.PickShield -> overlay = (overlay as Overlay.PickShield).back
             overlay != Overlay.None -> overlay = Overlay.None
-            ytFull -> ytFull = false
-            ytActive && web.canGoBack() -> web.goBack()
         }
     }
     // 天氣：有 GPS 用 GPS，沒有就先用新店
@@ -145,7 +121,7 @@ fun HomeScreen(
     // 方塊預設要開哪個 App
     fun defaultPkg(role: Role): String? = when (role) {
         Role.SHIELD -> app.shieldPackage()
-        Role.YOUTUBE -> app.apps.findByPackages("com.google.android.youtube", "com.google.android.apps.youtube.music")?.pkg ?: app.apps.findByLabel("YouTube")?.pkg
+        Role.YOUTUBE -> app.youtubePackage()
         Role.PHONE -> app.apps.findByLabel("藍牙電話", "蓝牙电话", "藍牙", "蓝牙", "Bluetooth", "電話", "电话", "BT")?.pkg
         else -> null
     }
@@ -199,35 +175,25 @@ fun HomeScreen(
                 val clockSide: @Composable () -> Unit = {
                     Column(Modifier.width(360.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         ClockCompass(now, heading, circleMode, 300, onTap = { p.circleMode.set((circleMode + 1) % 3) }, onLong = ::launchShield)
-                        val g = guide
-                        if (g != null) NavCard(g, Modifier.width(360.dp).height(154.dp), onClick = ::openNav)
-                        else WeatherCard(weather, district ?: (if (fix == null) "新店" else null), online, onClick = { overlay = Overlay.Weather })
+                        WeatherCard(weather, district ?: (if (fix == null) "新店" else null), online, onClick = { overlay = Overlay.Weather })
                     }
                 }
-                // 神盾保留位置（YouTube 另外畫在下面）
-                val shieldSide: @Composable () -> Unit = {
-                    Column(Modifier.width(Layout.SIDE_W.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth().height(110.dp).drawBehind {
-                                drawRoundRect(C.Gold.copy(alpha = 0.55f), cornerRadius = CornerRadius(20.dp.toPx()),
-                                    style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 7.dp.toPx()))))
-                            },
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Icon(Icons.Rounded.Shield, null, tint = C.Gold, modifier = Modifier.size(40.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text("神盾懸浮視窗", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = C.Gold)
-                                Text(
-                                    when {
-                                        shieldLeft -> "放左邊（靠駕駛座）"
-                                        autoShield -> "發動後自動開啟，保留這個位置"
-                                        else -> "保留這個位置"
-                                    },
-                                    fontSize = 16.sp, color = C.Sub,
-                                )
-                            }
-                        }
+                // 導航區（導航中＝導航小卡；沒在導航＝三個大按鈕）＋ YouTube
+                val navSide: @Composable () -> Unit = {
+                    Column(Modifier.width(Layout.SIDE_W.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        val g = guide
+                        if (g != null) NavCard(g, Modifier.fillMaxWidth().height(Layout.NAV_H.dp), onClick = ::openNav)
+                        else NavQuick(
+                            Modifier.fillMaxWidth().height(Layout.NAV_H.dp),
+                            onVoice = { onVoice("請說目的地") { q -> app.navSearch(q) } },
+                            onHome = { app.navHome(false) }, onWork = { app.navHome(true) },
+                        )
+                        YouTubeCard(
+                            ytPhoto, Modifier.fillMaxWidth().weight(1f),
+                            onOpen = app::openYouTube,
+                            onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
+                            onChangePhoto = { overlay = Overlay.PickPhoto },
+                        )
                     }
                 }
                 val player: @Composable () -> Unit = {
@@ -245,25 +211,10 @@ fun HomeScreen(
                         onLocalPage = { if (!local.scanned && !local.scanning) app.local.rescan(); overlay = Overlay.Music },
                     )
                 }
-                if (shieldLeft) { shieldSide(); player(); clockSide() } else { clockSide(); player(); shieldSide() }
+                if (shieldLeft) { navSide(); player(); clockSide() } else { clockSide(); player(); navSide() }
             }
             Dock(tiles, ::tap) { i -> overlay = Overlay.PickTile(i) }
         }
-
-        // YouTube：小畫面時放在神盾下面；全畫面時蓋滿整個螢幕（同一個網頁，播放不中斷）
-        val ytX = if (shieldLeft) Layout.PAD_X else 1280 - Layout.PAD_X - Layout.SIDE_W
-        val ytY = Layout.TOP + Layout.MID_H - Layout.YT_H
-        YouTubePanel(
-            web = web,
-            modifier = if (ytFull) Modifier.fillMaxSize() else Modifier.offset(ytX.dp, ytY.dp).size(Layout.SIDE_W.dp, Layout.YT_H.dp),
-            active = ytActive, photo = ytPhoto,
-            driving = driving, restricted = ytRestrict, passenger = passenger, full = ytFull,
-            onActivate = { openYt(); ytFull = true }, onClose = { closeYt() },
-            onVoice = { onVoice("說出想看的影片") { q -> openYt("https://m.youtube.com/results?search_query=" + Uri.encode(q)); ytFull = true } },
-            onPassenger = { askPassenger = true }, onFull = { ytFull = true },
-            onChangePhoto = { overlay = Overlay.PickPhoto },
-            onOpenApp = { val d = defaultPkg(Role.YOUTUBE); if (d != null) app.apps.launch(d) else app.say("車機上沒有 YouTube App") },
-        )
 
         when (val o = overlay) {
             Overlay.Drawer -> AppsPage(
@@ -271,7 +222,7 @@ fun HomeScreen(
                 onLaunch = { a -> overlay = Overlay.None; app.apps.launch(a.pkg) },
                 onAssign = { a, i -> p.tile(i).set(a.pkg); app.say("已放到下方第 ${i + 1} 個方塊") },
                 onInfo = { a -> SystemInfo.openAppInfo(ctx, a.pkg) },
-                onUninstall = { a -> uninstallOrInfo(app, a.pkg, a.system) },
+                onUninstall = { a -> app.uninstallOrInfo(a.pkg, a.system) },
                 onVoice = { cb -> onVoice("說出 App 名稱", cb) },
             ) { overlay = Overlay.None }
             is Overlay.PickTile -> AppPicker("選擇「${roles[o.slot].label}」要打開的 App", app.apps, apps, allowReset = true, onPick = { a ->
@@ -288,7 +239,7 @@ fun HomeScreen(
                         autoRadio, autoShield, shieldApp()?.label ?: (if (shieldPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
                         autoFm, fmApp()?.label ?: (if (fmPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
                         ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
-                        shieldLeft = shieldLeft, splitOn = splitOn, memText = mem?.text ?: "",
+                        shieldLeft = shieldLeft, memText = mem?.text ?: "",
                     ),
                     onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield(Overlay.Settings) },
                     onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,
@@ -298,7 +249,7 @@ fun HomeScreen(
                     onPermissions = onAskPermissions,
                     onDefaultHome = { runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } },
                     onResetTiles = { resetTiles = true },
-                    onShieldLeft = p.shieldLeft::set, onSplit = app::openAccessibilitySettings, onMemory = { overlay = Overlay.Background },
+                    onShieldLeft = p.shieldLeft::set, onMemory = { overlay = Overlay.Background },
                 ) { overlay = Overlay.None }
             }
             Overlay.PickPhoto -> PhotoPicker(ytPhoto, onPick = { k -> p.ytPhoto.set(k); overlay = Overlay.None },
@@ -311,7 +262,6 @@ fun HomeScreen(
                     onHome = { overlay = Overlay.None; app.navHome(false) },
                     onWork = { overlay = Overlay.None; app.navHome(true) },
                     onOpen = { if (navPkg != null) { overlay = Overlay.None; app.apps.launch(navPkg) } else overlay = Overlay.PickTile(2) },
-                    onSplit = { if (navPkg != null) { overlay = Overlay.None; app.startSplit() } else overlay = Overlay.PickTile(2) },
                 ) { overlay = Overlay.None }
             }
             Overlay.Weather -> {
@@ -330,8 +280,6 @@ fun HomeScreen(
         }
         MessageBanner(message, Modifier.align(Alignment.TopCenter).padding(top = 70.dp))
 
-        if (askPassenger) ConfirmBox("副駕駛觀看", "確定由副駕駛觀看影片嗎？\n駕駛請專心開車。這一趟有效，下次發動車子會恢復。", "由副駕駛觀看",
-            onOk = { app.passengerMode.value = true; askPassenger = false }, onCancel = { askPassenger = false })
         if (resetTiles) ConfirmBox("恢復預設", "確定把下方七個方塊全部恢復成預設嗎？", "恢復",
             onOk = { (0 until 7).forEach { p.tile(it).set("") }; resetTiles = false }, onCancel = { resetTiles = false })
     }

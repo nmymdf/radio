@@ -62,28 +62,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 分割畫面時，放在導航旁邊的精簡桌面 -->
-        <activity
-            android:name=".split.SplitDeskActivity"
-            android:exported="false"
-            android:taskAffinity="com.archiekuo.carhome.split"
-            android:launchMode="singleTask"
-            android:resizeableActivity="true"
-            android:excludeFromRecents="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode|density" />
-
-        <!-- 協助工具：分割畫面切換＋金色浮動按鈕 -->
-        <service
-            android:name=".split.SplitService"
-            android:exported="true"
-            android:label="@string/split_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data android:name="android.accessibilityservice" android:resource="@xml/split_service" />
-        </service>
-
         <service
             android:name=".media.LocalMusicService"
             android:exported="true"

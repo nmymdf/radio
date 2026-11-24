@@ -49,7 +49,7 @@ fun NavCard(g: NavGuide, modifier: Modifier, compact: Boolean = false, tiny: Boo
     val (d, u) = distText(g.segDist)
     val arrow = if (compact) 64 else 96
     Row(
-        modifier.card().clickable(onClick = onClick).padding(horizontal = if (compact) 14.dp else 20.dp, vertical = 12.dp),
+        modifier.card().clickable(onClick = onClick).padding(horizontal = if (compact) 14.dp else 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 18.dp),
     ) {
         Box(Modifier.size(arrow.dp).clip(RoundedCornerShape(if (compact) 16.dp else 20.dp)).background(GoldBrush), contentAlignment = Alignment.Center) {
@@ -64,5 +64,30 @@ fun NavCard(g: NavGuide, modifier: Modifier, compact: Boolean = false, tiny: Boo
             val rest = if (tiny) remainText(g, twoLines = true).substringBefore('\n') else remainText(g, twoLines = compact)
             if (rest.isNotEmpty()) Text(rest, fontSize = (if (compact) 15 else 17).sp, color = C.Sub, maxLines = if (compact) 2 else 1, lineHeight = (if (compact) 19 else 22).sp, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
         }
+    }
+}
+
+/** 沒在導航時：三個大按鈕「說目的地／回家／去公司」 */
+@Composable
+fun NavQuick(modifier: Modifier, onVoice: () -> Unit, onHome: () -> Unit, onWork: () -> Unit) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        QuickBtn(Icons.Rounded.Mic, "說目的地", true, onVoice)
+        QuickBtn(Icons.Rounded.Home, "回家", false, onHome)
+        QuickBtn(Icons.Rounded.Work, "去公司", false, onWork)
+    }
+}
+
+@Composable
+private fun RowScope.QuickBtn(icon: ImageVector, label: String, primary: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        Modifier.weight(1f).fillMaxHeight()
+            .then(if (primary) Modifier.clip(shape).background(GoldBrush) else Modifier.card(shape, tileBrush(), alpha = 0.45f))
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(icon, null, tint = if (primary) C.Ink else C.Gold, modifier = Modifier.size(40.dp))
+        Spacer(Modifier.height(8.dp))
+        Text(label, fontSize = 23.sp, fontWeight = FontWeight.Bold, color = if (primary) C.Ink else Color.White, maxLines = 1)
     }
 }

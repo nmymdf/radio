@@ -9,7 +9,6 @@ import android.provider.Settings
 import android.speech.RecognizerIntent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,15 +31,12 @@ import androidx.lifecycle.lifecycleScope
 import com.archiekuo.carhome.ui.CarTheme
 import com.archiekuo.carhome.ui.Look
 import com.archiekuo.carhome.ui.HomeScreen
-import com.archiekuo.carhome.ui.CompactDesk
-import com.archiekuo.carhome.ui.createYouTubeWebView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val app get() = application as CarApp
     private var homeTick by mutableIntStateOf(0)
-    private var web: WebView? = null
 
     private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { onPermissionsResult() }
 
@@ -67,8 +63,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        val w = createYouTubeWebView(this) { app.prefs.ytUrl.set(it) }
-        web = w
         lifecycleScope.launch { app.prefs.hideStatus.flow.collectLatest { applyBars(it) } }
 
         if (neededPermissions().any { !granted(it) }) askPermissions() else onPermissionsResult()
@@ -79,21 +73,10 @@ class MainActivity : ComponentActivity() {
                 // 依螢幕大小等比縮放：照 1280×720 設計，任何尺寸的車機都能完整顯示
                 val d = LocalDensity.current
                 BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    val wDp = maxWidth.value
-                    val hDp = maxHeight.value.coerceAtLeast(1f)
-                    if (wDp / hDp >= 1.5f) {
-                        val scale = minOf(wDp / 1280f, hDp / 720f)
-                        CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
-                            Box(Modifier.requiredSize(1280.dp, 720.dp)) {
-                                HomeScreen(app, w, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
-                            }
-                        }
-                    } else {
-                        // 桌面本身被分割成窄的（有些車機會這樣）：改用精簡桌面
-                        val scale = (hDp / 720f).coerceAtLeast(0.3f)
-                        val designW = (wDp / scale).coerceAtLeast(300f)
-                        CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
-                            Box(Modifier.requiredSize(designW.dp, 720.dp)) { CompactDesk(app, designW) {} }
+                    val scale = minOf(maxWidth.value / 1280f, maxHeight.value / 720f)
+                    CompositionLocalProvider(LocalDensity provides Density(d.density * scale, 1f)) {
+                        Box(Modifier.requiredSize(1280.dp, 720.dp)) {
+                            HomeScreen(app, homeTick, ::askPermissions, ::startVoice, ::pickPhoto) { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this@MainActivity) }
                         }
                     }
                 }
@@ -158,8 +141,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             homeTick++
-            // 用分割畫面導航時，按首頁鍵回到「導航＋桌面」
-            app.restoreSplit()
         }
         handleTestIntent(intent)
     }
@@ -167,11 +148,6 @@ class MainActivity : ComponentActivity() {
     /** 雲端模擬車機測試用：指定導航 App（模擬器上沒有高德） */
     private fun handleTestIntent(i: Intent?) {
         i?.getStringExtra("test_nav_pkg")?.let { pkg -> if (pkg.matches(Regex("[A-Za-z0-9_.]+"))) app.prefs.tile(2).set(pkg) }
-        when (i?.getStringExtra("test_split")) {
-            "toggle" -> android.util.Log.i("CarHome", "test toggle=" + com.archiekuo.carhome.split.SplitService.instance?.toggleSplit())
-            "desk" -> app.testOpenSplitDesk()
-            "start" -> app.startSplit()
-        }
     }
 
     override fun onResume() {
@@ -179,7 +155,7 @@ class MainActivity : ComponentActivity() {
         app.radio.connect()
         lifecycleScope.launch { app.apps.refresh() }
         if (firstDone) onPermissionsResult()
-        web?.onResume()
+        app.homeVisible = true
         applyBars(app.prefs.hideStatus.value)
     }
 
@@ -188,8 +164,8 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) applyBars(app.prefs.hideStatus.value)
     }
 
-    override fun onDestroy() {
-        web?.destroy()
-        super.onDestroy()
+    override fun onPause() {
+        app.homeVisible = false
+        super.onPause()
     }
 }

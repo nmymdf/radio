@@ -36,14 +36,6 @@ class Prefs(ctx: Context) {
     val shieldLeft = BoolPref("shieldLeft", false)
     /** 內部音樂最近播放（路徑，用換行分隔，最新的在前面） */
     val recentSongs = StrPref("recentSongs", "")
-    /** 浮動按鈕位置（-1＝預設左下角） */
-    var floatX: Int
-        get() = p.getInt("floatX", -1)
-        set(v) { p.edit().putInt("floatX", v).apply() }
-    var floatY: Int
-        get() = p.getInt("floatY", -1)
-        set(v) { p.edit().putInt("floatY", v).apply() }
-
     /** 發動後自動播網路收音機 */
     val autoRadio = BoolPref("autoRadio", true)
     /** 發動後自動開神盾 */

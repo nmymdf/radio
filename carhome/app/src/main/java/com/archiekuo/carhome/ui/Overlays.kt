@@ -102,7 +102,6 @@ data class SettingsModel(
     val ytRestrict: Boolean, val viz: Boolean, val vizTempo: Boolean, val hideStatus: Boolean, val overlayOk: Boolean, val vizReal: Boolean,
     val black: Boolean = false,
     val shieldLeft: Boolean = false,
-    val splitOn: Boolean = false,
     val memText: String = "",
 )
 
@@ -112,7 +111,7 @@ fun SettingsPanel(
     onAutoRadio: (Boolean) -> Unit, onAutoShield: (Boolean) -> Unit, onPickShield: () -> Unit,
     onAutoFm: (Boolean) -> Unit, onPickFm: () -> Unit, onYt: (Boolean) -> Unit, onViz: (Boolean) -> Unit, onVizTempo: (Boolean) -> Unit,
     onHideStatus: (Boolean) -> Unit, onBlack: (Boolean) -> Unit = {}, onOverlay: () -> Unit, onPermissions: () -> Unit, onDefaultHome: () -> Unit, onResetTiles: () -> Unit,
-    onShieldLeft: (Boolean) -> Unit = {}, onSplit: () -> Unit = {}, onMemory: () -> Unit = {},
+    onShieldLeft: (Boolean) -> Unit = {}, onMemory: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     PanelFrame("車機桌面設定", onBack) {
@@ -126,21 +125,13 @@ fun SettingsPanel(
                 SwitchRow("沒網路時自動切 FM", "網路收音機斷網超過 10 秒，改開原廠 FM；網路恢復再切回來", m.autoFm, onAutoFm)
                 ActionRow("FM 收音機 App", m.fmLabel, onPickFm)
             }
-            Group("YouTube") {
-                SwitchRow("行駛中只播聲音", "車子在動時遮住畫面；副駕駛要看時，按「副駕駛觀看」", m.ytRestrict, onYt)
-            }
             Group("畫面") {
                 SwitchRow("全黑桌面", "關閉＝午夜藍加金色；打開＝全黑背景，晚上開車更不刺眼", m.black, onBlack)
-                SwitchRow("神盾和 YouTube 放左邊", "打開＝神盾、YouTube 在左邊（靠駕駛座），時鐘和天氣換到右邊", m.shieldLeft, onShieldLeft)
+                SwitchRow("導航區和 YouTube 放左邊", "打開＝導航區、YouTube 在左邊（靠駕駛座），時鐘和天氣換到右邊", m.shieldLeft, onShieldLeft)
                 SwitchRow("跳動光條", if (m.vizReal) "下方彩虹光條跟著音樂跳動（已讀到聲音）" else "下方彩虹光條（讀不到聲音時會柔和起伏）", m.viz, onViz)
                 SwitchRow("光條流動跟著節奏", "快歌流得快，慢歌流得慢", m.vizTempo, onVizTempo)
                 SwitchRow("隱藏系統狀態列", "畫面更乾淨（日期和網路狀態桌面上都有）", m.hideStatus, onHideStatus)
                 ActionRow("下方方塊全部恢復預設", "恢復", onResetTiles)
-            }
-            Group("分割畫面導航") {
-                ActionRow("協助工具（分割畫面、金色浮動按鈕）", if (m.splitOn) "已開啟" else "尚未開啟（點這裡打開）", onSplit)
-                Text("在導航選單按「分割畫面」：導航和桌面各佔一邊。左下角金色按鈕可以一鍵切換全畫面／分割；導航全畫面時按「首頁」會回到分割。",
-                    fontSize = 17.sp, color = C.Sub, lineHeight = 25.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp))
             }
             Group("系統") {
                 ActionRow("記憶體與背景 App", m.memText.ifBlank { "查看" }, onMemory)
@@ -210,7 +201,7 @@ fun PhotoPicker(current: String, onPick: (String) -> Unit, onUsb: () -> Unit, on
 
 /** 點「導航」方塊：說目的地、回家、去公司、打開導航 */
 @Composable
-fun NavMenu(appLabel: String?, onVoice: () -> Unit, onHome: () -> Unit, onWork: () -> Unit, onOpen: () -> Unit, onSplit: () -> Unit, onBack: () -> Unit) {
+fun NavMenu(appLabel: String?, onVoice: () -> Unit, onHome: () -> Unit, onWork: () -> Unit, onOpen: () -> Unit, onBack: () -> Unit) {
     PanelFrame("導航 ・ ${appLabel ?: "尚未選擇導航 App"}", onBack) {
         Column(Modifier.fillMaxSize().padding(horizontal = 40.dp), verticalArrangement = Arrangement.Center) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -218,7 +209,6 @@ fun NavMenu(appLabel: String?, onVoice: () -> Unit, onHome: () -> Unit, onWork: 
                 BigNavButton(Icons.Rounded.Home, "回家", "一鍵開始導航", false, onHome)
                 BigNavButton(Icons.Rounded.Work, "去公司", "一鍵開始導航", false, onWork)
                 BigNavButton(Icons.Rounded.Map, "打開導航", appLabel ?: "選擇導航 App", false, onOpen)
-                BigNavButton(Icons.Rounded.VerticalSplit, "分割畫面", "導航＋桌面各一邊", false, onSplit)
             }
             Spacer(Modifier.height(28.dp))
             Text("「回家」、「去公司」請先在導航 App 裡設好地址 ・ 長按「導航」方塊可以更換導航 App", fontSize = 19.sp, color = C.Sub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -246,7 +236,7 @@ private fun RowScope.BigNavButton(icon: androidx.compose.ui.graphics.vector.Imag
     ) {
         Icon(icon, null, tint = if (primary) C.Ink else C.Gold, modifier = Modifier.size(76.dp))
         Spacer(Modifier.height(14.dp))
-        Text(label, fontSize = 30.sp, fontWeight = FontWeight.Bold, color = if (primary) C.Ink else Color.White, maxLines = 1)
+        Text(label, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = if (primary) C.Ink else Color.White, maxLines = 1)
         Spacer(Modifier.height(6.dp))
         Text(sub, fontSize = 17.sp, color = if (primary) C.Ink.copy(alpha = 0.75f) else C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 8.dp))
     }

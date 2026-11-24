@@ -15,8 +15,6 @@ import com.archiekuo.carhome.media.RadioRemote
 import com.archiekuo.carhome.media.VisualizerEngine
 import com.archiekuo.carhome.net.NetworkMonitor
 import com.archiekuo.carhome.nav.NavInfo
-import com.archiekuo.carhome.split.SplitDeskActivity
-import com.archiekuo.carhome.split.SplitService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,6 +41,7 @@ class CarApp : Application() {
     val message = MutableStateFlow<String?>(null)
     private var messageJob: Job? = null
     fun say(text: String) {
+        if (!homeVisible) runCatching { android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_LONG).show() }
         message.value = text
         messageJob?.cancel()
         messageJob = scope.launch { delay(3500); message.value = null }
@@ -68,6 +67,8 @@ class CarApp : Application() {
         radio = RadioRemote(this)
         local = LocalMusicRemote(this, prefs)
         nav = NavInfo(this, scope)
+        com.archiekuo.carhome.ui.Look.black = prefs.black.value
+        scope.launch { prefs.black.flow.collect { com.archiekuo.carhome.ui.Look.black = it } }
         scope.launch { apps.refresh() }
         watchNetwork()
         // 車機休眠／喚醒（很多車機熄火是休眠，不是關機）
@@ -180,121 +181,36 @@ class CarApp : Application() {
         }
     }
 
-    // ---- 分割畫面導航 ----
-    /** 使用者正在用「導航＋桌面」分割畫面（按首頁鍵會回到分割） */
-    val splitSession = MutableStateFlow(false)
-    /** 要求桌面打開全畫面 YouTube（從分割畫面的 YouTube 方塊） */
-    val ytRequest = MutableStateFlow(0)
-    private var splitJob: Job? = null
-    /** 最後一次看到導航畫面的時間（太久沒看到就不自動回分割） */
-    @Volatile var navSeenAt = 0L
+    /** 桌面是不是在最前面（不在的話，提示改用系統提示，蓋在其他 App 上也看得到） */
+    @Volatile var homeVisible = false
 
-    fun openAccessibilitySettings() {
-        runCatching { startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    // ---- YouTube：直接打開車機上的 YouTube App ----
+    fun youtubePackage(): String? =
+        apps.findByPackages("com.google.android.youtube", "app.revanced.android.youtube", "com.vanced.android.youtube", "com.google.android.apps.youtube.music")?.pkg
+            ?: apps.findByLabel("YouTube")?.pkg
+
+    fun openYouTube() {
+        val p = youtubePackage() ?: run { say("車機上找不到 YouTube App"); return }
+        if (!apps.launch(p)) say("YouTube 打不開，請再試一次")
     }
 
-    /** 檢查能不能用分割畫面；不能的話說明原因 */
-    private fun splitReady(): SplitService? {
-        if (android.os.Build.VERSION.SDK_INT < 24) { say("這台車機的 Android 版本太舊，不支援分割畫面"); return null }
-        val svc = SplitService.instance
-        if (svc == null) {
-            say("請在「協助工具」裡打開「車機桌面」")
-            openAccessibilitySettings()
-            return null
+    /** 語音說的關鍵字交給 YouTube App 搜尋 */
+    fun searchYouTube(q: String) {
+        val p = youtubePackage() ?: run { say("車機上找不到 YouTube App"); return }
+        val search = Intent(Intent.ACTION_SEARCH).setPackage(p).putExtra(android.app.SearchManager.QUERY, q).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val view = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode(q))).setPackage(p).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val ok = runCatching { startActivity(search); true }.getOrDefault(false) || runCatching { startActivity(view); true }.getOrDefault(false)
+        if (!ok) { apps.launch(p); say("請在 YouTube 裡搜尋：$q") }
+    }
+
+    /** 移除 App；原廠內建的不能移除，改成打開 App 資訊讓使用者停用 */
+    fun uninstallOrInfo(pkg: String, system: Boolean) {
+        if (system) {
+            say("原廠內建 App 不能移除，請按「停用」")
+            com.archiekuo.carhome.data.SystemInfo.openAppInfo(this, pkg)
+        } else if (!com.archiekuo.carhome.data.SystemInfo.uninstall(this, pkg)) {
+            com.archiekuo.carhome.data.SystemInfo.openAppInfo(this, pkg)
         }
-        return svc
-    }
-
-    fun testOpenSplitDesk() = openSplitDesk()
-
-    private fun openSplitDesk() {
-        android.util.Log.i("CarHome", "openSplitDesk split=" + SplitService.instance?.isSplit())
-        // 分割畫面時，新開的 App 會自動放進空的那一半
-        val i = Intent(this, SplitDeskActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        runCatching { startActivity(i) }
-    }
-
-    /** 從桌面開始：打開導航 → 分割 → 另一邊放桌面 */
-    fun startSplit() {
-        val svc = splitReady() ?: return
-        val pkg = navPackage() ?: run { say("找不到導航 App，請長按「導航」方塊選擇"); return }
-        splitJob?.cancel()
-        splitJob = scope.launch {
-            if (svc.isSplit()) { splitSession.value = true; openSplitDesk(); return@launch }
-            apps.launch(pkg)
-            // 等導航畫面出來（最多 8 秒）
-            var waited = 0
-            while (waited < 8000 && !svc.isVisible(pkg)) { delay(250); waited += 250 }
-            delay(600)
-            enterSplitNow(svc)
-        }
-    }
-
-    /** 導航正在全畫面時（浮動按鈕）：分割，另一邊放桌面 */
-    fun enterSplitFromNav() {
-        val svc = splitReady() ?: return
-        splitJob?.cancel()
-        splitJob = scope.launch { enterSplitNow(svc) }
-    }
-
-    private suspend fun enterSplitNow(svc: SplitService) {
-        android.util.Log.i("CarHome", "enterSplit toggle=" + svc.toggleSplit())
-        var waited = 0
-        while (waited < 2500 && !svc.isSplit()) { delay(200); waited += 200 }
-        if (svc.isSplit()) {
-            splitSession.value = true
-            delay(400)
-            openSplitDesk()
-        } else {
-            splitSession.value = false
-            say("這個導航 App 不支援分割畫面")
-        }
-    }
-
-    /** 分割中 → 導航變全畫面（之後按首頁鍵會回到分割） */
-    fun navFull() {
-        val svc = SplitService.instance ?: return
-        if (svc.isSplit()) svc.toggleSplit()
-    }
-
-    /** 結束分割，回到完整桌面 */
-    fun endSplit() {
-        splitSession.value = false
-        splitJob?.cancel()
-        val svc = SplitService.instance
-        scope.launch {
-            if (svc != null && svc.isSplit()) {
-                svc.toggleSplit()
-                var waited = 0
-                while (waited < 2000 && svc.isSplit()) { delay(150); waited += 150 }
-                delay(300)
-            }
-            bringHome()
-        }
-    }
-
-    /** 按首頁鍵：如果正在用分割畫面導航，就回到分割 */
-    fun restoreSplit() {
-        if (!splitSession.value) return
-        if (SystemClock.elapsedRealtime() - navSeenAt > 30 * 60_000L) { splitSession.value = false; return }
-        val svc = SplitService.instance ?: return
-        val pkg = navPackage() ?: return
-        splitJob?.cancel()
-        splitJob = scope.launch {
-            delay(300)
-            if (svc.isSplit()) { openSplitDesk(); return@launch }
-            apps.launch(pkg)
-            var waited = 0
-            while (waited < 5000 && !svc.isVisible(pkg)) { delay(250); waited += 250 }
-            delay(500)
-            enterSplitNow(svc)
-        }
-    }
-
-    /** 從分割畫面打開桌面的全畫面 YouTube */
-    fun openYouTubeOnDesk() {
-        ytRequest.value++
-        bringHome()
     }
 
     fun bringHome() {
