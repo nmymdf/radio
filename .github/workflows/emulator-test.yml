@@ -1,0 +1,45 @@
+name: Emulator Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ 'tests/**', '.github/workflows/emulator-test.yml' ]
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get APKs
+        run: |
+          mkdir apks
+          git fetch --depth 1 origin apk apk-car
+          git show origin/apk:radio-v1.3.apk > apks/radio.apk
+          git show origin/apk-car:carhome-v0.1.apk > apks/carhome.apk
+          ls -la apks
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Run emulator test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -skin 1280x720
+          script: bash tests/emulator-test.sh
+      - name: Publish results
+        if: always()
+        run: |
+          mkdir -p results && cd results
+          git init -q && git checkout -q -b test-results
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          echo "build ${GITHUB_SHA}" > BUILD.txt
+          git add . && git commit -qm "test results" && git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" test-results
