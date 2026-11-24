@@ -19,7 +19,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.Newspaper
+import androidx.compose.material.icons.rounded.RecordVoiceOver
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
@@ -111,6 +116,42 @@ fun HomeScreen(
                 }
             }
         }
+
+        val talk = Categories.talkHome
+        if (talk.isNotEmpty()) {
+            SectionHeader(Icons.Rounded.Mic, "講話節目") { onCategory(talk.first().key) }
+            Row(
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                talk.take(3).forEach { c -> TalkCard(c, Modifier.weight(1f)) { onCategory(c.key) } }
+            }
+        }
+    }
+}
+
+/** 講話節目的圖示 */
+fun talkIcon(key: String): androidx.compose.ui.graphics.vector.ImageVector = when (key) {
+    "zhnews" -> Icons.Rounded.Newspaper
+    "ennews" -> Icons.Rounded.Language
+    "enlearn" -> Icons.Rounded.School
+    "entalk" -> Icons.Rounded.RecordVoiceOver
+    else -> Icons.Rounded.Mic
+}
+
+@Composable
+private fun TalkCard(c: Category, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier
+            .height(100.dp)
+            .goldCard(RoundedCornerShape(16.dp), Brush.verticalGradient(listOf(Color(c.tint), Color(0xFF121A46))))
+            .clickable(role = Role.Button, onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(talkIcon(c.key), null, tint = RC.Gold, modifier = Modifier.size(42.dp))
+        Spacer(Modifier.height(6.dp))
+        Text(c.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
     }
 }
 

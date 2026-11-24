@@ -118,7 +118,7 @@ class PlayerConnection(private val ctx: Context, private val store: LocalStore) 
         }
         val md = MediaMetadata.Builder()
             .setTitle(name)
-            .setArtist("網路收音機 ・ ${cat.title}")
+            .setArtist(listOf(countryZh, languageZh).filter { it.isNotBlank() }.joinToString(" ・ ").ifBlank { "網路收音機 ・ ${cat.title}" })
             .setArtworkUri(art)
             .setExtras(extras)
             .build()

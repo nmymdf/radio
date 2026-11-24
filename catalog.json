@@ -1,0 +1,630 @@
+{
+ "version": 1,
+ "note": "網路收音機 分類清單（作者：ArchieKUO）。修改這個檔案就能調整各分類的電台，App 下次打開會自動更新。",
+ "categories": [
+  {
+   "key": "hot",
+   "title": "熱門推薦",
+   "group": "music",
+   "art": "art_radio",
+   "icon": "ic_cat_hot",
+   "tint": "#2B3672",
+   "home": "music",
+   "specs": [
+    {
+     "countrycode": "TW"
+    },
+    {
+     "top": "1"
+    }
+   ],
+   "priority": [
+    "ICRT",
+    "Hit FM",
+    "中廣",
+    "飛碟",
+    "好事",
+    "KISS",
+    "亞洲"
+   ]
+  },
+  {
+   "key": "cpop",
+   "title": "華語流行",
+   "group": "music",
+   "art": "art_pop",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": "hot",
+   "specs": [
+    {
+     "tag": "mandopop"
+    },
+    {
+     "tag": "c-pop"
+    },
+    {
+     "tag": "chinese pop"
+    },
+    {
+     "tag": "pop",
+     "language": "mandarin"
+    },
+    {
+     "tag": "pop",
+     "language": "chinese"
+    },
+    {
+     "tag": "pop",
+     "countrycode": "TW"
+    }
+   ],
+   "priority": [
+    "Hit FM",
+    "中廣流行",
+    "I like",
+    "好事",
+    "KISS",
+    "亞洲",
+    "飛揚",
+    "City"
+   ]
+  },
+  {
+   "key": "taiyu",
+   "title": "台語歌曲",
+   "group": "music",
+   "art": "art_cafe",
+   "icon": "ic_cat_rock",
+   "tint": "#3A2F70",
+   "home": "music",
+   "specs": [
+    {
+     "language": "taiwanese"
+    },
+    {
+     "language": "hokkien"
+    },
+    {
+     "language": "min nan"
+    },
+    {
+     "tag": "hokkien"
+    },
+    {
+     "tag": "taiwanese"
+    },
+    {
+     "tag": "taiyu"
+    },
+    {
+     "tag": "oldies",
+     "countrycode": "TW"
+    },
+    {
+     "tag": "folk",
+     "countrycode": "TW"
+    },
+    {
+     "name": "台語"
+    },
+    {
+     "name": "鄉愁"
+    },
+    {
+     "name": "寶島"
+    }
+   ],
+   "priority": [
+    "台語",
+    "鄉愁",
+    "寶島",
+    "下港",
+    "金聲",
+    "台灣"
+   ]
+  },
+  {
+   "key": "oldies",
+   "title": "懷舊老歌",
+   "group": "music",
+   "art": "art_light",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "tag": "oldies",
+     "countrycode": "TW"
+    },
+    {
+     "tag": "oldies",
+     "language": "chinese"
+    },
+    {
+     "tag": "oldies",
+     "language": "mandarin"
+    },
+    {
+     "tag": "oldies",
+     "countrycode": "HK"
+    },
+    {
+     "tag": "oldies"
+    }
+   ],
+   "priority": [
+    "懷舊",
+    "老歌",
+    "金聲",
+    "Radio Taiwan"
+   ]
+  },
+  {
+   "key": "world",
+   "title": "國際流行",
+   "group": "music",
+   "art": "art_sunset",
+   "icon": "ic_cat_world",
+   "tint": "#243A70",
+   "home": "music",
+   "specs": [
+    {
+     "tag": "top 40"
+    },
+    {
+     "tag": "hits"
+    },
+    {
+     "tag": "pop",
+     "language": "english"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "jkpop",
+   "title": "日韓流行",
+   "group": "music",
+   "art": "art_pop",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "tag": "j-pop"
+    },
+    {
+     "tag": "jpop"
+    },
+    {
+     "tag": "k-pop"
+    },
+    {
+     "tag": "kpop"
+    },
+    {
+     "tag": "anime"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "classical",
+   "title": "古典音樂",
+   "group": "music",
+   "art": "art_classic",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": "hot",
+   "specs": [
+    {
+     "tag": "classical"
+    },
+    {
+     "tag": "classical",
+     "countrycode": "TW"
+    }
+   ],
+   "priority": [
+    "愛樂",
+    "Philharmonic"
+   ]
+  },
+  {
+   "key": "jazz",
+   "title": "爵士音樂",
+   "group": "music",
+   "art": "art_jazz",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": "hot",
+   "specs": [
+    {
+     "tag": "jazz"
+    },
+    {
+     "tag": "smooth jazz"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "easy",
+   "title": "輕鬆音樂",
+   "group": "music",
+   "art": "art_light",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": "hot",
+   "specs": [
+    {
+     "tag": "easy listening"
+    },
+    {
+     "tag": "lounge"
+    },
+    {
+     "tag": "instrumental"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "rock",
+   "title": "搖滾音樂",
+   "group": "music",
+   "art": "art_jazz",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "tag": "rock"
+    },
+    {
+     "tag": "classic rock"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "love",
+   "title": "情歌浪漫",
+   "group": "music",
+   "art": "art_pop",
+   "icon": "ic_cat_love",
+   "tint": "#4B2B6C",
+   "home": "music",
+   "specs": [
+    {
+     "tag": "love songs"
+    },
+    {
+     "tag": "romantic"
+    },
+    {
+     "tag": "ballads"
+    },
+    {
+     "tag": "love",
+     "language": "chinese"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "zen",
+   "title": "佛教音樂",
+   "group": "music",
+   "art": "art_zen",
+   "icon": "ic_cat_zen",
+   "tint": "#2F396C",
+   "home": "music",
+   "specs": [
+    {
+     "tag": "buddhist"
+    },
+    {
+     "tag": "buddhism"
+    },
+    {
+     "tag": "buddha"
+    },
+    {
+     "tag": "meditation"
+    },
+    {
+     "name": "佛"
+    },
+    {
+     "name": "大愛"
+    },
+    {
+     "name": "法音"
+    }
+   ],
+   "priority": [
+    "佛",
+    "大愛",
+    "法音",
+    "Buddh"
+   ]
+  },
+  {
+   "key": "nature",
+   "title": "自然放鬆",
+   "group": "music",
+   "art": "art_lake",
+   "icon": "ic_cat_nature",
+   "tint": "#22406A",
+   "home": "music",
+   "specs": [
+    {
+     "tag": "nature"
+    },
+    {
+     "tag": "relax"
+    },
+    {
+     "tag": "ambient"
+    },
+    {
+     "tag": "sleep"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "zhnews",
+   "title": "國語新聞",
+   "group": "talk",
+   "art": "art_radio",
+   "icon": null,
+   "tint": "#1F3A6E",
+   "home": "talk",
+   "specs": [
+    {
+     "tag": "news",
+     "countrycode": "TW"
+    },
+    {
+     "tag": "news",
+     "language": "mandarin"
+    },
+    {
+     "tag": "news",
+     "language": "chinese"
+    },
+    {
+     "tag": "news",
+     "countrycode": "HK"
+    },
+    {
+     "name": "新聞"
+    }
+   ],
+   "priority": [
+    "News98",
+    "九八",
+    "中廣新聞",
+    "BCC",
+    "Rti",
+    "中央廣播",
+    "警廣",
+    "Police",
+    "新聞"
+   ]
+  },
+  {
+   "key": "zhtalk",
+   "title": "國語談話",
+   "group": "talk",
+   "art": "art_cafe",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "tag": "talk",
+     "countrycode": "TW"
+    },
+    {
+     "tag": "talk",
+     "language": "mandarin"
+    },
+    {
+     "tag": "talk",
+     "language": "chinese"
+    },
+    {
+     "tag": "variety",
+     "countrycode": "TW"
+    }
+   ],
+   "priority": [
+    "飛碟",
+    "UFO",
+    "警廣",
+    "教育",
+    "漢聲",
+    "Rti"
+   ]
+  },
+  {
+   "key": "ennews",
+   "title": "英語新聞",
+   "group": "talk",
+   "art": "art_sunset",
+   "icon": null,
+   "tint": "#2A2F6E",
+   "home": "talk",
+   "specs": [
+    {
+     "tag": "news",
+     "language": "english"
+    },
+    {
+     "name": "BBC World Service"
+    },
+    {
+     "name": "NPR"
+    }
+   ],
+   "priority": [
+    "BBC World",
+    "NPR",
+    "ABC News",
+    "CNN",
+    "Bloomberg",
+    "Voice of America",
+    "VOA"
+   ]
+  },
+  {
+   "key": "entalk",
+   "title": "英語談話",
+   "group": "talk",
+   "art": "art_jazz",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "tag": "talk",
+     "language": "english"
+    },
+    {
+     "name": "LBC"
+    },
+    {
+     "name": "BBC Radio 4"
+    }
+   ],
+   "priority": [
+    "BBC Radio 4",
+    "LBC",
+    "NPR",
+    "Talk"
+   ]
+  },
+  {
+   "key": "enlearn",
+   "title": "英語學習",
+   "group": "talk",
+   "art": "art_light",
+   "icon": null,
+   "tint": "#203E5C",
+   "home": "talk",
+   "specs": [
+    {
+     "tag": "english learning"
+    },
+    {
+     "tag": "learning english"
+    },
+    {
+     "tag": "esl"
+    },
+    {
+     "name": "Learning English"
+    },
+    {
+     "name": "VOA"
+    },
+    {
+     "tag": "education",
+     "language": "english"
+    },
+    {
+     "name": "BBC World Service"
+    }
+   ],
+   "priority": [
+    "Learning English",
+    "VOA",
+    "BBC World Service"
+   ]
+  },
+  {
+   "key": "tw",
+   "title": "台灣電台",
+   "group": "region",
+   "art": "art_radio",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "countrycode": "TW",
+     "limit": "100"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "hk",
+   "title": "香港電台",
+   "group": "region",
+   "art": "art_pop",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "countrycode": "HK",
+     "limit": "100"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "jp",
+   "title": "日本電台",
+   "group": "region",
+   "art": "art_zen",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "countrycode": "JP",
+     "limit": "100"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "us",
+   "title": "美國電台",
+   "group": "region",
+   "art": "art_jazz",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "countrycode": "US",
+     "limit": "100"
+    }
+   ],
+   "priority": []
+  },
+  {
+   "key": "gb",
+   "title": "英國電台",
+   "group": "region",
+   "art": "art_classic",
+   "icon": null,
+   "tint": "#2B3672",
+   "home": null,
+   "specs": [
+    {
+     "countrycode": "GB",
+     "limit": "100"
+    }
+   ],
+   "priority": []
+  }
+ ]
+}

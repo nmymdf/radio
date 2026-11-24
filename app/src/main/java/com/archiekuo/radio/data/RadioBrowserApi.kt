@@ -65,20 +65,34 @@ class RadioBrowserApi {
                 hls = o.optInt("hls") == 1,
                 votes = o.optInt("votes"),
                 categoryKey = cat ?: Categories.guess(tags),
+                state = o.optString("state"),
+                language = o.optString("language"),
+                homepage = o.optString("homepage"),
             )
         }
         return out
     }
 
-    suspend fun byTag(tag: String, cat: String, limit: Int = 60) = withContext(Dispatchers.IO) {
-        parse(get("/json/stations/search?tag=${enc(tag)}&hidebroken=true&order=votes&reverse=true&limit=$limit"), cat)
-    }
-
-    suspend fun top(cat: String, limit: Int = 80) = withContext(Dispatchers.IO) {
-        parse(get("/json/stations/topvote/$limit?hidebroken=true"), cat)
+    /** 依條件搜尋：tag、language、countrycode、name…；top=1 代表全球人氣排行 */
+    suspend fun bySpec(spec: Map<String, String>, cat: String) = withContext(Dispatchers.IO) {
+        val limit = spec["limit"] ?: "60"
+        if (spec["top"] != null) {
+            parse(get("/json/stations/topvote/$limit?hidebroken=true"), cat)
+        } else {
+            val q = spec.filterKeys { it != "limit" }.entries.joinToString("&") { "${it.key}=${enc(it.value)}" }
+            parse(get("/json/stations/search?$q&hidebroken=true&order=votes&reverse=true&limit=$limit"), cat)
+        }
     }
 
     suspend fun byName(q: String, limit: Int = 60) = withContext(Dispatchers.IO) {
         parse(get("/json/stations/search?name=${enc(q)}&hidebroken=true&order=votes&reverse=true&limit=$limit"), null)
+    }
+
+    /** 讀取 GitHub 上最新的分類清單 */
+    suspend fun fetchText(url: String): String = withContext(Dispatchers.IO) {
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 8000
+        c.readTimeout = 10000
+        try { c.inputStream.bufferedReader().use { it.readText() } } finally { c.disconnect() }
     }
 }

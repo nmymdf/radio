@@ -2,6 +2,7 @@ package com.archiekuo.radio.ui.screens
 
 import android.media.AudioManager
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.Radio
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.SkipNext
@@ -102,7 +108,7 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .padding(top = 22.dp, bottom = 20.dp)
-                .size(260.dp)
+                .size(240.dp)
                 .shadow(36.dp, RoundedCornerShape(26.dp), ambientColor = RC.Gold, spotColor = RC.Gold)
                 .goldCard(RoundedCornerShape(26.dp), borderAlpha = 0.5f),
         )
@@ -119,15 +125,7 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Box(Modifier.padding(horizontal = 24.dp)) { StatusLine(ps, fontSize = 17) }
-        Text(
-            st.subtitle,
-            fontSize = 16.sp,
-            color = RC.Sub,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp),
-        )
+        SourceCard(st)
         ps.nowPlaying?.let {
             Text(
                 "♪ $it",
@@ -153,6 +151,56 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
         VolumeRow()
         SleepCard(ps.sleepMinutes, ps.sleepEndAt, vm::setSleep)
         AuthorLine(Modifier.padding(top = 16.dp, bottom = 24.dp))
+    }
+}
+
+/** 節目來源：電台、地區、語言、資料、音質 */
+@Composable
+private fun SourceCard(st: com.archiekuo.radio.model.Station) {
+    val rows = listOf(
+        Triple(Icons.Rounded.Radio, "電台", st.name),
+        Triple(Icons.Rounded.Place, "地區", st.place),
+        Triple(Icons.Rounded.Translate, "語言", st.languageZh),
+        Triple(Icons.Rounded.Storage, "資料", st.sourceText),
+        Triple(Icons.Rounded.GraphicEq, "音質", st.quality),
+    ).filter { it.third.isNotBlank() }
+    Column(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 14.dp)
+            .fillMaxWidth()
+            .goldCard(RoundedCornerShape(18.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Text("節目來源", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = RC.Gold, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
+        rows.forEach { (icon, k, v) ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(42.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(icon, null, tint = RC.Gold, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(k, fontSize = 17.sp, color = RC.Sub, modifier = Modifier.width(48.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(v, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            }
+        }
+        if (st.homepage.startsWith("http")) {
+            val ctx = LocalContext.current
+            Text(
+                "打開電台官方網站",
+                fontSize = 17.sp,
+                color = RC.Gold,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .padding(top = 2.dp, bottom = 4.dp)
+                    .clickable {
+                        runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(st.homepage))) }
+                    }
+                    .padding(vertical = 8.dp),
+            )
+        }
     }
 }
 

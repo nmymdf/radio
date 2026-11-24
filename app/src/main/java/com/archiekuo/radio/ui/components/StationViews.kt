@@ -154,7 +154,7 @@ fun StatusLine(state: PlayerState, fontSize: Int = 15) {
     val (dot, text, color) = when {
         state.error != null -> Triple(RC.Red, state.error, RC.Red)
         state.buffering -> Triple(RC.Gold, "連線中…", RC.Gold)
-        state.isPlaying -> Triple(RC.Green, "Live Radio", RC.GreenText)
+        state.isPlaying -> Triple(RC.Green, state.station?.liveLine ?: "直播中", RC.GreenText)
         else -> Triple(RC.Dim, "已暫停", RC.Sub)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
