@@ -65,7 +65,7 @@ fun CompactDesk(app: CarApp, width: Float, onClose: () -> Unit) {
     val navOpen = { app.navPackage()?.let { app.apps.launch(it) }; Unit }
     val infoCard: @Composable (Modifier, Boolean) -> Unit = { m, small ->
         val g = guide
-        if (g != null) NavCard(g, m, compact = true, onClick = navOpen)
+        if (g != null) NavCard(g, m, compact = true, tiny = small, onClick = navOpen)
         else if (!small) MiniWeather(weather, district ?: (if (fix == null) "新店" else null), online, m)
     }
 
