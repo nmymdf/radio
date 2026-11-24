@@ -1,5 +1,5 @@
 #!/bin/bash
-# 詳細天氣驗證 — 作者：ArchieKUO
+# 導航小卡驗證 — 作者：ArchieKUO
 set -x
 OUT=results
 mkdir -p $OUT
@@ -10,16 +10,7 @@ for p in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION RECORD_AUDIO READ_EXTERNAL_
 adb shell cmd package set-home-activity com.archiekuo.carhome/.MainActivity || true
 adb emu geo fix 121.5419 24.9676
 adb shell am start -n com.archiekuo.carhome/.MainActivity
-sleep 20
-adb emu geo fix 121.5419 24.9676
-for i in 1 2 3 4 5 6 7 8; do
-  adb logcat -d | grep -q "weather detail failed" && echo "fail seen $i"
-  sleep 15
-done
-shot w01-桌面 2
-adb shell input tap 200 467
-shot w02-詳細天氣 6
-adb shell input swipe 700 330 300 330 600
-shot w03-詳細天氣-12小時往左滑 3
-adb logcat -d | grep -E "CarHome" > $OUT/log.txt
+sleep 25
+( for i in $(seq 1 20); do adb shell am broadcast -a AUTONAVI_STANDARD_BROADCAST_SEND --ei KEY_TYPE 10001 --ei ICON 2 --ei SEG_REMAIN_DIS 1250 --es NEXT_ROAD_NAME "中興路三段" --ei ROUTE_REMAIN_DIS 128000 --ei ROUTE_REMAIN_TIME 5400 >/dev/null 2>&1; sleep 2; done ) &
+shot n01-導航小卡 8
 adb logcat -d -b crash > $OUT/crash-log.txt || true
