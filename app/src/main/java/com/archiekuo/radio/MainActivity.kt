@@ -28,7 +28,7 @@ import com.archiekuo.radio.ui.theme.RadioTheme
 /** 螢幕本來就是橫的（車機、電視）→ 用車機版 */
 fun isNaturalLandscape(a: Activity): Boolean {
     @Suppress("DEPRECATION")
-    val rot = (a.getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+    val rot = (a.getSystemService(android.content.Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
     val land = a.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     return if (rot == Surface.ROTATION_0 || rot == Surface.ROTATION_180) land else !land
 }
