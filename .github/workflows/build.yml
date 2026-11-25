@@ -2,10 +2,14 @@ name: Build APK
 on:
   push:
     branches: [ main ]
-    paths-ignore: [ 'desktop/**', '.github/workflows/desktop.yml', 'carhome/**', '.github/workflows/carhome.yml' ]
+    paths-ignore: [ 'desktop/**', '.github/workflows/desktop.yml', 'carhome/**', '.github/workflows/carhome.yml', 'tests/**', 'tools/**', '.github/workflows/emulator-test.yml', '.github/workflows/stations.yml' ]
   workflow_dispatch:
 permissions:
   contents: write
+# 同時有好幾次建置時，只留最新的那一次（避免舊版蓋掉新版）
+concurrency:
+  group: radio-apk
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest

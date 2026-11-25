@@ -91,3 +91,4 @@ shot c03-車機-播放Jazz24 12
 
 adb logcat -d -b crash > $OUT/crash-log.txt || true
 echo done
+# rerun 1795592907
