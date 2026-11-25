@@ -68,9 +68,35 @@ function langZh(s) {
   return f.length ? f.slice(0, 2).join('、') : (s.lang.split(',')[0].trim().replace(/^./, (c) => c.toUpperCase()));
 }
 const placeOf = (s) => [...new Set([countryZh(s), (s.state || '').trim()].filter(Boolean))].join(' ・ ');
-const qualityOf = (s) => [s.br > 0 ? `${s.br} kbps` : '', (s.codec || '').toUpperCase()].filter(Boolean).join(' ・ ');
-const sourceOf = (s) => (s.cur ? '精選電台 ・ Radio Browser' : 'Radio Browser 公開資料庫');
+const qualityOf = (s) => [s.br > 0 ? `${s.br} kbps` : '', (s.codec || '').toUpperCase().replace('UNKNOWN', '')].filter(Boolean).join(' ・ ') || '依電台而定';
+const sourceOf = (s) => (s.cur ? '精選電台（已實測可播放）' : 'Radio Browser 公開資料庫');
 const artOf = (s) => A(`${cat(s.cat).art}.webp`);
+/* 電台封面：有台標顯示台標，沒有（或太小）就顯示名稱標章（電台名稱前兩個字，每台顏色不同） */
+const BADGE = [['#2B3A8C', '#141B4D'], ['#7A2E3B', '#3A1220'], ['#1F6B5C', '#0C2E28'], ['#6B4A1F', '#2E1E0A'], ['#4B2E7A', '#1F1238'], ['#1F557A', '#0B2236'], ['#7A5A1F', '#362508'], ['#5C2E5C', '#26102A']];
+function badgeText(name) {
+  const n = (name || '').trim(); if (!n) return '♪';
+  const han = /\p{Script=Han}/u;
+  if (han.test(n[0])) return [...n].filter((c) => han.test(c)).slice(0, 2).join('');
+  const w = n.split(/[^A-Za-z0-9]+/).filter(Boolean); const f = w[0];
+  if (!f) return '♪';
+  if (f.length >= 2 && f.length <= 5 && /^[A-Z0-9]+$/.test(f)) return f;
+  if (f.length <= 4) return f.toUpperCase();
+  if (w.length >= 2) return w.slice(0, 3).map((x) => x[0].toUpperCase()).join('');
+  return f.slice(0, 3).toUpperCase();
+}
+function hashStr(t) { let h = 0; for (const c of (t || '').toLowerCase()) h = (h * 31 + c.codePointAt(0)) | 0; return Math.abs(h); }
+function artHtml(s, cls) {
+  const [a, b] = BADGE[hashStr(s.name) % BADGE.length];
+  const t = badgeText(s.name);
+  const logo = /^https?:\/\//.test(s.fav || '') ? `<img class="logo" src="${esc(s.fav)}" alt="" referrerpolicy="no-referrer">` : '';
+  return `<div class="${cls} badge len${Math.min(t.length, 5)}" style="background:linear-gradient(135deg,${a},${b})"><span>${esc(t)}</span>${logo}</div>`;
+}
+/* 台標載入成功（夠大）才顯示白底台標；失敗或太小就留名稱標章 */
+document.addEventListener('load', (e) => {
+  const im = e.target; if (!(im instanceof HTMLImageElement) || !im.classList.contains('logo')) return;
+  if (im.naturalWidth >= 48 && im.naturalHeight >= 48) im.parentElement.classList.add('haslogo'); else im.remove();
+}, true);
+document.addEventListener('error', (e) => { const im = e.target; if (im instanceof HTMLImageElement && im.classList.contains('logo')) im.remove(); }, true);
 const subOf = (s) => { const p = [countryZh(s), langZh(s), s.br > 0 ? `${s.br} kbps` : ''].filter(Boolean); return (p.length ? p : [cat(s.cat).title]).join(' ・ '); };
 const liveOf = (s) => ['直播中', countryZh(s), langZh(s)].filter(Boolean).join(' ・ ');
 
@@ -115,6 +141,7 @@ function parse(arr, c) {
       id: o.stationuuid || url, name: (o.name || '').trim().replace(/\s+/g, ' ') || '未命名電台', url,
       country: o.country || '', cc: o.countrycode || '', state: o.state || '', lang: o.language || '', home: o.homepage || '', codec: o.codec || '',
       br: o.bitrate || 0, hls: o.hls === 1, votes: o.votes || 0, cat: c || guess(o.tags),
+      fav: (o.favicon || '').trim(), clicks: o.clickcount || 0,
     });
   }
   return out;
@@ -132,13 +159,49 @@ function specPath(sp) {
   const q = Object.entries(sp).filter(([k]) => k !== 'limit').map(([k, v]) => `${k}=${enc(v)}`).join('&');
   return `/json/stations/search?${q}&hidebroken=true&order=votes&reverse=true&limit=${limit}`;
 }
+/* 各國精選大台（雲端每週實測能播，catalog.json 的 featured） */
+let FEAT = {};
+const HOT_COUNTRIES = [['TW', '台灣'], ['US', '美國'], ['GB', '英國'], ['KR', '韓國'], ['JP', '日本'], ['HK', '香港']];
+function parseFeatured(f) {
+  const out = {};
+  for (const [cc, arr] of Object.entries(f || {})) {
+    out[cc] = (arr || []).filter((x) => x.url).map((x) => ({
+      id: x.uuid || x.url, name: x.name, url: x.url, country: '', cc, state: x.state || '', lang: x.language || '', home: x.homepage || '',
+      codec: x.codec || '', br: x.bitrate || 0, hls: !!x.hls, votes: 0, cat: 'hot', cur: true, fav: x.favicon || '',
+    }));
+  }
+  return out;
+}
+/* 精選大台放最前面，資料庫裡重複的拿掉 */
+function withFeatured(feat, rest, key) {
+  if (!feat || !feat.length) return rest;
+  const f = feat.map((s) => ({ ...s, cat: key }));
+  const names = new Set(f.map((s) => s.name.toLowerCase()));
+  return [...f, ...rest.filter((s) => !f.some((x) => x.id === s.id || x.url === s.url) && !names.has(s.name.toLowerCase()))];
+}
+/* 熱門排行：精選大台＋該國實際收聽次數最多的 */
+async function loadHot(cc, force) {
+  const key = 'hot-' + cc;
+  if (!force && cache[key]) return cache[key];
+  let rest = [];
+  try { rest = parse(await window.native.rb(`/json/stations/search?countrycode=${enc(cc)}&hidebroken=true&order=clickcount&reverse=true&limit=80`), 'hot'); } catch (e) { if (!(FEAT[cc] || []).length) throw e; }
+  const seen = new Set();
+  rest = rest.filter((s) => { const k = s.name.toLowerCase().trim(); if (seen.has(k)) return false; seen.add(k); return true; });
+  const res = withFeatured(FEAT[cc], rest, 'hot').slice(0, 80);
+  if (!res.length) throw new Error('這個國家目前找不到電台');
+  cache[key] = res;
+  return res;
+}
 async function loadCat(key, force) {
   if (!force && cache[key]) return cache[key];
   const c = cat(key);
   const specs = (c.specs && c.specs.length) ? c.specs : [{ top: '1' }];
   const parts = await Promise.allSettled(specs.map((sp) => window.native.rb(specPath(sp))));
-  if (parts.every((p) => p.status === 'rejected')) throw new Error('net');
-  const res = prioritize(clean(parts.flatMap((p) => (p.status === 'fulfilled' ? parse(p.value, key) : []))), c).slice(0, 100);
+  // 「熱門推薦」和「依地區」：該國的精選大台放最前面
+  const cc = key === 'hot' ? 'TW' : (c.group === 'region' ? (specs.find((sp) => sp.countrycode) || {}).countrycode : null);
+  const feat = cc ? FEAT[cc] : null;
+  if (parts.every((p) => p.status === 'rejected') && !(feat && feat.length)) throw new Error('net');
+  const res = withFeatured(feat, prioritize(clean(parts.flatMap((p) => (p.status === 'fulfilled' ? parse(p.value, key) : []))), c), key).slice(0, 100);
   if (!res.length) throw new Error('這個分類目前找不到電台');
   cache[key] = res;
   return res;
@@ -240,7 +303,7 @@ const cur = () => nav.stack[nav.stack.length - 1];
 function goTab(r) { nav.stack = [{ r }]; render(true); }
 function open(r, extra) { if (cur().r === r) return; nav.stack.push({ r, ...extra }); render(true); }
 function back() { if (nav.stack.length > 1) { nav.stack.pop(); render(true); } }
-const tabOf = (r) => ({ home: 0, search: 0, cats: 1, fav: 2, mine: 3, hist: 3, settings: 3 }[r] ?? 0);
+const tabOf = (r) => ({ home: 0, search: 0, hot: 0, cats: 1, fav: 2, mine: 3, hist: 3, settings: 3 }[r] ?? 0);
 
 /* ---------- 共用畫面片段 ---------- */
 const author = () => `<div class="author gold">作者：ArchieKUO　v${VERSION}</div>`;
@@ -252,14 +315,16 @@ const loading = () => '<div class="msg"><div class="spin"></div><span>正在找�
 const msg = (t, d, act, label) => `<div class="msg"><b>${esc(t)}</b>${d ? `<span>${esc(d)}</span>` : ''}${act ? `<button class="bigbtn goldbtn" data-act="${act}">${label}</button>` : ''}</div>`;
 const lists = {};
 function row(s, l, i, mode = 'normal', extra = '') {
+  const isRank = mode === 'rank';
   const curr = pl.st && pl.st.id === s.id;
   let lead = '', trail;
   if (mode === 'check') lead = `<button class="chk ${extra ? 'on' : ''}" data-act="check" data-id="${esc(s.id)}" aria-label="選取"><span>${extra ? ic('check', 20) : ''}</span></button>`;
+  if (mode === 'rank') mode = 'normal';
   if (mode === 'hist') trail = `<span class="tm">${extra}</span>`;
   else if (mode === 'check') trail = '';
   else { const f = store.isFav(s.id); trail = `<button class="fav ${f ? 'on' : ''}" data-act="fav" data-l="${l}" data-i="${i}" aria-label="${f ? '取消收藏' : '收藏'}">${ic('heart', 28, f)}</button>`; }
   return `<div class="row ${curr ? 'cur' : ''}" data-act="play" data-l="${l}" data-i="${i}">${lead}
-    <img class="art" src="${artOf(s)}" alt="">
+    ${isRank ? `<span class="rank ${i < 3 ? 'top' : ''}">${i + 1}</span>` : ''}${artHtml(s, 'art')}
     <div class="info"><div class="nm">${curr ? `<span style="color:var(--gold);display:flex">${ic('eq', 20)}</span>` : ''}${esc(s.name)}</div><div class="sb">${esc(subOf(s))}</div></div>
     ${trail}<button class="playb goldbtn" data-act="play" data-l="${l}" data-i="${i}" aria-label="播放">${ic('play', 26)}</button></div>`;
 }
@@ -286,12 +351,29 @@ function pageHome() {
     <button class="ibtn" data-act="open" data-r="settings" aria-label="設定">${ic('gear')}</button></div>
   <div class="carousel card" id="car"><div class="track" id="track" style="transform:translateX(-${state.slide * 100}%)">${slides}</div>
     <div class="dots">${BANNERS.map((_, i) => `<span class="${i === state.slide ? 'on' : ''}" data-act="dot" data-i="${i}"></span>`).join('')}</div></div>
-  <div class="sec"><span style="color:var(--gold);display:flex">${ic('flame', 30)}</span><h2>熱門電台</h2><button class="more" data-act="tab" data-r="cats">查看更多${ic('chev', 20)}</button></div>
-  <div class="hot">${HOTC().map((c) => `<div class="hotc card" data-act="cat" data-k="${c.key}"><img src="${A(c.art + '.webp')}" alt=""><div class="lb">${c.title}<span style="color:var(--gold);display:flex">${ic('eq', 18)}</span></div></div>`).join('')}</div>
-  <div class="sec"><span style="color:var(--gold);display:flex">${ic('note', 30)}</span><h2>音樂分類</h2><button class="more" data-act="tab" data-r="cats">查看更多${ic('chev', 20)}</button></div>
+  <div class="sec"><span style="color:var(--gold);display:flex">${ic('flame', 30)}</span><h2>熱門電台</h2><button class="more" data-act="hot" data-cc="TW">查看更多${ic('chev', 20)}</button></div>
+  <div class="cats">${HOT_COUNTRIES.map(([cc, nm]) => `<div class="ccard card" data-act="hot" data-cc="${cc}"><b>${nm}</b><span>${esc((FEAT[cc] || []).slice(0, 2).map((s) => s.name).join('、'))}</span></div>`).join('')}</div>
+  <div class="sec"><span style="color:var(--gold);display:flex">${ic('note', 30)}</span><h2>音樂分類</h2><button class="more" data-act="cat" data-k="${(MUSICC()[0] || {}).key || 'hot'}">查看更多${ic('chev', 20)}</button></div>
   <div class="cats">${MUSICC().map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><img src="${A(c.icon + '.png')}" alt="">${c.title}</div>`).join('')}</div>
   ${TALKC().length ? `<div class="sec"><span style="color:var(--gold);display:flex">${ic('mic', 30)}</span><h2>講話節目</h2><button class="more" data-act="cat" data-k="${TALKC()[0].key}">查看更多${ic('chev', 20)}</button></div>
   <div class="cats">${TALKC().slice(0, 3).map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><span style="color:var(--gold);display:flex">${ic(TALK_ICON[c.key] || 'mic', 42)}</span>${c.title}</div>`).join('')}</div>` : ''}`;
+}
+
+/* 熱門電台：上面選國家，下面是該國排行 */
+function pageHot() {
+  const cc = nav.hotCc || 'TW';
+  const key = 'hot-' + cc;
+  const name = (HOT_COUNTRIES.find((x) => x[0] === cc) || [cc, cc])[1];
+  const l = state.cats[key];
+  if (!l) { state.cats[key] = { loading: true }; loadHot(cc).then((x) => { state.cats[key] = { list: x }; }).catch((e) => { state.cats[key] = { err: friendly(e) }; }).finally(() => { if (cur().r === 'hot' && nav.hotCc === cc) render(); }); }
+  const st = state.cats[key];
+  let h = header('熱門電台', { back: true }) + `<div class="cgrid">${HOT_COUNTRIES.map(([c, n]) => `<button class="pill ${c === cc ? 'on' : ''}" data-act="hot" data-cc="${c}">${n}</button>`).join('')}</div>`;
+  if (st.loading) return h + loading();
+  if (st.err) return h + msg(st.err, '', 'retry-hot', '再試一次');
+  const feat = st.list.filter((s) => s.cur).length;
+  lists.hot = st.list;
+  h += `<div class="note">${name} ・ 共 ${st.list.length} 台${feat ? ` ・ 前 ${feat} 台為實測精選大台` : ''}</div><div class="list">${st.list.map((s, i) => row(s, 'hot', i, 'rank')).join('')}</div>`;
+  return h;
 }
 
 function pageCats() {
@@ -316,7 +398,7 @@ function pagePlayer() {
     <button class="ibtn" data-act="favcur" style="color:var(--gold)" aria-label="${f ? '取消收藏' : '收藏'}">${ic('heart', 24, !!f)}</button></div>`;
   if (!s) return h + msg('還沒有選電台', '回到首頁，挑一個喜歡的電台吧', 'back', '回首頁');
   const left = pl.sleepEnd ? Math.max(0, Math.ceil((pl.sleepEnd - Date.now()) / 60000)) : 0;
-  h += `<img class="pcover" src="${artOf(s)}" alt="電台封面"><div class="pname">${esc(s.name)}</div>
+  h += `${artHtml(s, 'pcover')}<div class="pname">${esc(s.name)}</div>
     <div class="status">${statusHtml()}</div>${sourceCard(s)}
     <div class="ctrls"><button class="ibtn" style="width:64px;height:64px" data-act="prev" aria-label="上一台">${ic('prev', 34)}</button>
     <button class="ring" style="width:96px;height:96px" data-act="toggle" aria-label="${isOn() ? '暫停' : '播放'}">${ic(isOn() ? 'pause' : 'play', 48)}</button>
@@ -403,13 +485,13 @@ const content = document.getElementById('content');
 function render(resetScroll) {
   const r = cur().r;
   const top = content.scrollTop;
-  const html = { home: pageHome, cats: pageCats, player: pagePlayer, fav: pageFav, search: pageSearch, mine: pageMine, hist: pageHist, settings: pageSettings }[r]();
+  const html = { home: pageHome, hot: pageHot, cats: pageCats, player: pagePlayer, fav: pageFav, search: pageSearch, mine: pageMine, hist: pageHist, settings: pageSettings }[r]();
   content.innerHTML = html;
   content.scrollTop = resetScroll ? 0 : top;
   if (r === 'search' && !state.search && resetScroll) document.getElementById('q')?.focus();
   refreshMini(); renderNav();
 }
-function refresh() { const r = cur().r; if (r === 'player' || r === 'cats' || r === 'search' || r === 'fav' || r === 'hist') render(); else refreshMini(); }
+function refresh() { const r = cur().r; if (r === 'player' || r === 'hot' || r === 'cats' || r === 'search' || r === 'fav' || r === 'hist') render(); else refreshMini(); }
 function refreshMini() {
   const box = document.getElementById('mini');
   const s = pl.st;
@@ -453,6 +535,8 @@ document.addEventListener('click', (e) => {
     case 'open': open(el.dataset.r); break;
     case 'cat': nav.catKey = el.dataset.k; nav.catGroup = cat(el.dataset.k).group; nav.stack = [{ r: 'cats' }]; render(true); break;
     case 'pill': nav.catKey = el.dataset.k; render(); break;
+    case 'hot': nav.hotCc = el.dataset.cc; if (cur().r === 'hot') render(true); else open('hot'); break;
+    case 'retry-hot': delete state.cats['hot-' + nav.hotCc]; delete cache['hot-' + nav.hotCc]; render(); break;
     case 'group': { const g = el.dataset.g; nav.catGroup = g; if (cat(nav.catKey).group !== g && inGroup(g)[0]) nav.catKey = inGroup(g)[0].key; render(); break; }
     case 'homepage': if (pl.st && pl.st.home) window.native.openUrl(pl.st.home); break;
     case 'retry-cat': delete state.cats[nav.catKey]; delete cache[nav.catKey]; render(); break;
@@ -518,7 +602,7 @@ setInterval(() => {
 (async () => {
   try { const v = await window.native.version(); VERSION = v.split('.').slice(0, 2).join('.'); } catch { /* 用預設 */ }
   try { state.onTop = await window.native.isOnTop(); } catch { state.onTop = false; }
-  try { CATS = JSON.parse(await window.native.catalog()).categories || []; } catch { CATS = []; }
+  try { const cj = JSON.parse(await window.native.catalog()); CATS = cj.categories || []; FEAT = parseFeatured(cj.featured); } catch { CATS = []; }
   render(true);
   if (store.autoPlay && store.last) play(store.last, [store.last]);
 })();
