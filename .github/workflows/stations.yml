@@ -1,0 +1,27 @@
+name: Check Stations
+# 每週一次＋改了候選名單時：逐一測試各國大台的播放網址，能播的才放進 catalog.json
+on:
+  push:
+    branches: [main]
+    paths: ['tools/stations/**', '.github/workflows/stations.yml']
+  schedule:
+    - cron: '17 19 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: python3 tools/stations/check.py
+      - name: Commit results
+        run: |
+          git config user.name "radio-check-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add catalog.json app/src/main/assets/catalog.json desktop/app/catalog.json tools/stations/report.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "電台檢查：更新各國精選電台（自動）"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
