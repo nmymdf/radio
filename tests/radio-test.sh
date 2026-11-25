@@ -63,3 +63,4 @@ adb shell am force-stop com.archiekuo.radio
 adb shell am start -n com.archiekuo.radio/.MainActivity
 shot c1-車機首頁 15
 adb logcat -d -b crash > $OUT/crash-log.txt || true
+# rerun
