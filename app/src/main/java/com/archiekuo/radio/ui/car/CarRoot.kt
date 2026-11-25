@@ -225,14 +225,7 @@ private fun CarHome(onHot: (String) -> Unit, onCategory: (String) -> Unit) {
             Text("熱門電台", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 4.dp, start = 4.dp))
         }
         items(Categories.hotCountries, key = { "hot-${it.first}" }, span = { GridItemSpan(4) }) { (cc, name) ->
-            val top = Categories.featured[cc].orEmpty().take(2).joinToString("、") { it.name }
-            Column(
-                Modifier.height(110.dp).goldCard(RoundedCornerShape(18.dp)).clickable(role = Role.Button) { onHot(cc) }.padding(horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-            ) {
-                Text(name, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                if (top.isNotEmpty()) Text(top, fontSize = 17.sp, color = RC.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
-            }
+            com.archiekuo.radio.ui.components.FlagButton(cc, name, false, Modifier.fillMaxWidth(), height = 84.dp, fontSize = 26) { onHot(cc) }
         }
         sections.forEach { (title, list) ->
             if (list.isEmpty()) return@forEach

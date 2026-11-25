@@ -162,6 +162,7 @@ function specPath(sp) {
 /* 各國精選大台（雲端每週實測能播，catalog.json 的 featured） */
 let FEAT = {};
 const HOT_COUNTRIES = [['TW', '台灣'], ['US', '美國'], ['GB', '英國'], ['KR', '韓國'], ['JP', '日本'], ['HK', '香港']];
+const flagBtn = (cc, nm, on) => `<button class="pill flagb ${on ? 'on' : ''}" data-act="hot" data-cc="${cc}"><img src="${A('flags/' + cc.toLowerCase() + '.svg')}" alt="">${nm}</button>`;
 function parseFeatured(f) {
   const out = {};
   for (const [cc, arr] of Object.entries(f || {})) {
@@ -325,7 +326,7 @@ function row(s, l, i, mode = 'normal', extra = '') {
   else { const f = store.isFav(s.id); trail = `<button class="fav ${f ? 'on' : ''}" data-act="fav" data-l="${l}" data-i="${i}" aria-label="${f ? '取消收藏' : '收藏'}">${ic('heart', 28, f)}</button>`; }
   return `<div class="row ${curr ? 'cur' : ''}" data-act="play" data-l="${l}" data-i="${i}">${lead}
     ${isRank ? `<span class="rank ${i < 3 ? 'top' : ''}">${i + 1}</span>` : ''}${artHtml(s, 'art')}
-    <div class="info"><div class="nm">${curr ? `<span style="color:var(--gold);display:flex">${ic('eq', 20)}</span>` : ''}${esc(s.name)}</div><div class="sb">${esc(subOf(s))}</div></div>
+    <div class="info"><div class="nm">${curr ? `<span style="color:var(--gold);display:inline-flex;vertical-align:-3px;margin-right:4px">${ic('eq', 20)}</span>` : ''}${esc(s.name)}</div><div class="sb">${esc(subOf(s))}</div></div>
     ${trail}<button class="playb goldbtn" data-act="play" data-l="${l}" data-i="${i}" aria-label="播放">${ic('play', 26)}</button></div>`;
 }
 function statusHtml() {
@@ -352,7 +353,7 @@ function pageHome() {
   <div class="carousel card" id="car"><div class="track" id="track" style="transform:translateX(-${state.slide * 100}%)">${slides}</div>
     <div class="dots">${BANNERS.map((_, i) => `<span class="${i === state.slide ? 'on' : ''}" data-act="dot" data-i="${i}"></span>`).join('')}</div></div>
   <div class="sec"><span style="color:var(--gold);display:flex">${ic('flame', 30)}</span><h2>熱門電台</h2><button class="more" data-act="hot" data-cc="TW">查看更多${ic('chev', 20)}</button></div>
-  <div class="cats">${HOT_COUNTRIES.map(([cc, nm]) => `<div class="ccard card" data-act="hot" data-cc="${cc}"><b>${nm}</b><span>${esc((FEAT[cc] || []).slice(0, 2).map((s) => s.name).join('、'))}</span></div>`).join('')}</div>
+  <div class="cgrid" style="padding:6px 16px 16px">${HOT_COUNTRIES.map(([cc, nm]) => flagBtn(cc, nm, false)).join('')}</div>
   <div class="sec"><span style="color:var(--gold);display:flex">${ic('note', 30)}</span><h2>音樂分類</h2><button class="more" data-act="cat" data-k="${(MUSICC()[0] || {}).key || 'hot'}">查看更多${ic('chev', 20)}</button></div>
   <div class="cats">${MUSICC().map((c) => `<div class="catc card" data-act="cat" data-k="${c.key}" style="background:linear-gradient(180deg,${c.tint},#121A46)"><img src="${A(c.icon + '.png')}" alt="">${c.title}</div>`).join('')}</div>
   ${TALKC().length ? `<div class="sec"><span style="color:var(--gold);display:flex">${ic('mic', 30)}</span><h2>講話節目</h2><button class="more" data-act="cat" data-k="${TALKC()[0].key}">查看更多${ic('chev', 20)}</button></div>
@@ -367,7 +368,7 @@ function pageHot() {
   const l = state.cats[key];
   if (!l) { state.cats[key] = { loading: true }; loadHot(cc).then((x) => { state.cats[key] = { list: x }; }).catch((e) => { state.cats[key] = { err: friendly(e) }; }).finally(() => { if (cur().r === 'hot' && nav.hotCc === cc) render(); }); }
   const st = state.cats[key];
-  let h = header('熱門電台', { back: true }) + `<div class="cgrid">${HOT_COUNTRIES.map(([c, n]) => `<button class="pill ${c === cc ? 'on' : ''}" data-act="hot" data-cc="${c}">${n}</button>`).join('')}</div>`;
+  let h = header('熱門電台', { back: true }) + `<div class="cgrid">${HOT_COUNTRIES.map(([c, n]) => flagBtn(c, n, c === cc)).join('')}</div>`;
   if (st.loading) return h + loading();
   if (st.err) return h + msg(st.err, '', 'retry-hot', '再試一次');
   const feat = st.list.filter((s) => s.cur).length;
@@ -398,23 +399,23 @@ function pagePlayer() {
     <button class="ibtn" data-act="favcur" style="color:var(--gold)" aria-label="${f ? '取消收藏' : '收藏'}">${ic('heart', 24, !!f)}</button></div>`;
   if (!s) return h + msg('還沒有選電台', '回到首頁，挑一個喜歡的電台吧', 'back', '回首頁');
   const left = pl.sleepEnd ? Math.max(0, Math.ceil((pl.sleepEnd - Date.now()) / 60000)) : 0;
-  h += `${artHtml(s, 'pcover')}<div class="pname">${esc(s.name)}</div>
-    <div class="status">${statusHtml()}</div>${sourceCard(s)}
+  h += `<div class="pfill"><div class="pblock">${artHtml(s, 'pcover')}<div class="pname">${esc(s.name)}</div>
+    <div class="status">${statusHtml()}</div></div>${sourceCard(s)}
     <div class="ctrls"><button class="ibtn" style="width:64px;height:64px" data-act="prev" aria-label="上一台">${ic('prev', 34)}</button>
     <button class="ring" style="width:96px;height:96px" data-act="toggle" aria-label="${isOn() ? '暫停' : '播放'}">${ic(isOn() ? 'pause' : 'play', 48)}</button>
     <button class="ibtn" style="width:64px;height:64px" data-act="next" aria-label="下一台">${ic('next', 34)}</button></div>
     <div class="vol">${ic('vol0', 30)}<input type="range" min="0" max="100" value="${store.volume}" id="volume" aria-label="音量">${ic('vol', 30)}</div>
-    <div class="sleep card"><div class="h">${ic('moon', 24)}睡眠定時</div>
-    <div class="opts">${[[0, '關閉'], [15, '15分'], [30, '30分'], [60, '60分'], [90, '90分']].map(([m, t]) => `<button class="pill ${pl.sleepMin === m ? 'on' : ''}" data-act="sleep" data-m="${m}">${t}</button>`).join('')}</div>
-    <div class="left" id="sleepleft">${pl.sleepEnd ? `還有 ${left} 分鐘後自動停止` : '選好時間，時間到就會自動停止播放'}</div></div>
-    <div class="pauthor">${author()}</div>`;
+    <div class="sleeprow"><span class="h">${ic('moon', 22)}<span id="sleepleft">${pl.sleepEnd ? `剩${left}分` : '睡眠'}</span></span>
+    <div class="opts">${[[0, '關閉'], [15, '15分'], [30, '30分'], [60, '60分'], [90, '90分']].map(([m, t]) => `<button class="pill ${pl.sleepMin === m ? 'on' : ''}" data-act="sleep" data-m="${m}">${t}</button>`).join('')}</div></div>
+    <div class="pauthor">${author()}</div></div>`;
   return h;
 }
 
 function sourceCard(s) {
-  const rows = [['radio', '電台', s.name], ['pin', '地區', placeOf(s)], ['lang', '語言', langZh(s)], ['db', '資料', sourceOf(s)], ['eq', '音質', qualityOf(s)]].filter((r) => r[2]);
-  return `<div class="src card"><div class="h">節目來源</div>${rows.map(([icn, k, v]) => `<div class="r"><span class="i">${ic(icn, 22, icn === 'eq')}</span><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')}
-    ${/^https?:\/\//.test(s.home || '') ? '<button class="web" data-act="homepage">打開電台官方網站</button>' : ''}</div>`;
+  const cells = [['地區', placeOf(s)], ['語言', langZh(s)], ['音質', qualityOf(s)], ['資料', s.cur ? '精選' : '公開資料庫']].filter((c) => c[1]);
+  const web = /^https?:\/\//.test(s.home || '') ? '<button class="web" data-act="homepage">官方網站 ›</button>' : '';
+  return `<div class="src card"><div class="h">節目來源${web}</div><div class="kv">${cells.map(([k, v]) =>
+    `<div><i>${k}</i><b>${esc(v)}${k === '資料' && s.cur ? '<span class="ck">已實測</span>' : ''}</b></div>`).join('')}</div></div>`;
 }
 function pageFav() {
   const favs = store.fav; lists.fav = favs;
@@ -495,8 +496,9 @@ function refresh() { const r = cur().r; if (r === 'player' || r === 'hot' || r =
 function refreshMini() {
   const box = document.getElementById('mini');
   const s = pl.st;
-  if (!s || cur().r === 'player') { box.innerHTML = ''; return; }
-  box.innerHTML = `<div class="box card" data-act="open" data-r="player"><img class="art" src="${artOf(s)}" alt="">
+  // 選了電台（或正在播）才出現下方播放器
+  if (!s || !s.name || cur().r === 'player' || !(state.opened || isOn())) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="box card" data-act="open" data-r="player">${artHtml(s, 'art')}
     <div class="info"><div class="nm">${esc(s.name)}</div><div class="status">${statusHtml()}</div></div>
     <button class="pbtn" data-act="prev" aria-label="上一台">${ic('prev', 32)}</button>
     <button class="ring" style="width:58px;height:58px;border-width:2.5px" data-act="toggle" aria-label="${isOn() ? '暫停' : '播放'}">${ic(isOn() ? 'pause' : 'play', 28)}</button>
@@ -540,14 +542,14 @@ document.addEventListener('click', (e) => {
     case 'group': { const g = el.dataset.g; nav.catGroup = g; if (cat(nav.catKey).group !== g && inGroup(g)[0]) nav.catKey = inGroup(g)[0].key; render(); break; }
     case 'homepage': if (pl.st && pl.st.home) window.native.openUrl(pl.st.home); break;
     case 'retry-cat': delete state.cats[nav.catKey]; delete cache[nav.catKey]; render(); break;
-    case 'play': { const s = L(); if (s) { play(s, lists[el.dataset.l]); open('player'); } break; }
+    case 'play': { const s = L(); if (s) { state.opened = true; play(s, lists[el.dataset.l]); open('player'); } break; }
     case 'fav': { const s = L(); if (s) { store.toggleFav(s); render(); } break; }
     case 'favcur': if (pl.st) { store.toggleFav(pl.st); render(); } break;
     case 'toggle': toggle(); break;
     case 'prev': step(-1); break;
     case 'next': step(1); break;
     case 'sleep': setSleep(+el.dataset.m); break;
-    case 'banner': playBanner(BANNERS[+el.dataset.i].key); open('player'); break;
+    case 'banner': state.opened = true; playBanner(BANNERS[+el.dataset.i].key); open('player'); break;
     case 'dot': setSlide(+el.dataset.i); break;
     case 'check': { const id = el.dataset.id; state.sel.has(id) ? state.sel.delete(id) : state.sel.add(id); render(); break; }
     case 'selall': state.sel = state.sel.size === store.fav.length ? new Set() : new Set(store.fav.map((s) => s.id)); render(); break;
@@ -595,7 +597,7 @@ document.addEventListener('pointerup', (e) => {
 /* 睡眠定時倒數 */
 setInterval(() => {
   const el = document.getElementById('sleepleft');
-  if (el && pl.sleepEnd) el.textContent = `還有 ${Math.max(0, Math.ceil((pl.sleepEnd - Date.now()) / 60000))} 分鐘後自動停止`;
+  if (el && pl.sleepEnd) el.textContent = `剩${Math.max(0, Math.ceil((pl.sleepEnd - Date.now()) / 60000))}分`;
 }, 1000);
 
 /* ---------- 啟動 ---------- */

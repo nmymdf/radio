@@ -3,6 +3,11 @@ package com.archiekuo.radio.ui.screens
 import android.media.AudioManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,127 +81,123 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
     val st = ps.station
     val fav = st != null && favs.any { it.id == st.id }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
+    // 剛好一整頁：內容依螢幕高度平均分配；螢幕太矮（或字很大）才可以往下滑
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val pageH = maxHeight
+        val cover = (pageH * 0.26f).coerceIn(150.dp, 240.dp)
+        Column(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = pageH),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CircleIconButton(Icons.Rounded.ArrowBackIosNew, "返回", onBack, iconSize = 22.dp)
-            Text("正在播放", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-            CircleIconButton(
-                if (fav) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                if (fav) "取消收藏" else "收藏",
-                { st?.let { vm.toggleFavorite(it) } },
-                tint = RC.Gold,
-            )
-        }
-
-        if (st == null) {
-            MessageBox("還沒有選電台", "回到首頁，挑一個喜歡的電台吧", "回首頁", onBack)
-            return@Column
-        }
-
-        StationArt(
-            st, 240.dp, 26.dp,
-            Modifier
-                .padding(top = 22.dp, bottom = 20.dp)
-                .shadow(36.dp, RoundedCornerShape(26.dp), ambientColor = RC.Gold, spotColor = RC.Gold),
-        )
-
-        Text(
-            st.name,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 24.dp),
-        )
-        Spacer(Modifier.height(8.dp))
-        Box(Modifier.padding(horizontal = 24.dp)) { StatusLine(ps, fontSize = 17) }
-        SourceCard(st)
-        ps.nowPlaying?.let {
-            Text(
-                "♪ $it",
-                fontSize = 17.sp,
-                color = RC.Gold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp),
-            )
-        }
-
-        Row(
-            Modifier.padding(top = 24.dp, bottom = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(34.dp),
-        ) {
-            CircleIconButton(Icons.Rounded.SkipPrevious, "上一台", vm::previous, size = 64.dp, iconSize = 34.dp)
-            PlayRing(ps.isPlaying || ps.buffering && ps.error == null, vm::toggle, 96.dp)
-            CircleIconButton(Icons.Rounded.SkipNext, "下一台", vm::next, size = 64.dp, iconSize = 34.dp)
-        }
-
-        VolumeRow()
-        SleepCard(ps.sleepMinutes, ps.sleepEndAt, vm::setSleep)
-        AuthorLine(Modifier.padding(top = 16.dp, bottom = 24.dp))
-    }
-}
-
-/** 節目來源：電台、地區、語言、資料、音質 */
-@Composable
-private fun SourceCard(st: com.archiekuo.radio.model.Station) {
-    val rows = listOf(
-        Triple(Icons.Rounded.Radio, "電台", st.name),
-        Triple(Icons.Rounded.Place, "地區", st.place),
-        Triple(Icons.Rounded.Translate, "語言", st.languageZh),
-        Triple(Icons.Rounded.Storage, "資料", st.sourceText),
-        Triple(Icons.Rounded.GraphicEq, "音質", st.quality),
-    ).filter { it.third.isNotBlank() }
-    Column(
-        Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp)
-            .fillMaxWidth()
-            .goldCard(RoundedCornerShape(18.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Text("節目來源", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = RC.Gold, modifier = Modifier.padding(top = 4.dp, bottom = 2.dp))
-        rows.forEach { (icon, k, v) ->
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(42.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(icon, null, tint = RC.Gold, modifier = Modifier.size(22.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(k, fontSize = 17.sp, color = RC.Sub, modifier = Modifier.width(48.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(v, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                CircleIconButton(Icons.Rounded.ArrowBackIosNew, "返回", onBack, iconSize = 22.dp)
+                Text("正在播放", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                CircleIconButton(
+                    if (fav) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                    if (fav) "取消收藏" else "收藏",
+                    { st?.let { vm.toggleFavorite(it) } },
+                    tint = RC.Gold,
+                )
+            }
+
+            if (st == null) {
+                MessageBox("還沒有選電台", "回到首頁，挑一個喜歡的電台吧", "回首頁", onBack)
+                return@Column
+            }
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(bottom = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 8.dp)) {
+                    StationArt(st, cover, 26.dp, Modifier.shadow(36.dp, RoundedCornerShape(26.dp), ambientColor = RC.Gold, spotColor = RC.Gold))
+                    Text(
+                        st.name, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 34.sp,
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp),
+                    )
+                    Box(Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp)) { StatusLine(ps, fontSize = 17) }
+                    ps.nowPlaying?.let {
+                        Text(
+                            "♪ $it", fontSize = 17.sp, color = RC.Gold, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp),
+                        )
+                    }
+                }
+                SourceCard(st)
+                Row(
+                    Modifier.padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(34.dp),
+                ) {
+                    CircleIconButton(Icons.Rounded.SkipPrevious, "上一台", vm::previous, size = 64.dp, iconSize = 34.dp)
+                    PlayRing(ps.isPlaying || ps.buffering && ps.error == null, vm::toggle, 92.dp)
+                    CircleIconButton(Icons.Rounded.SkipNext, "下一台", vm::next, size = 64.dp, iconSize = 34.dp)
+                }
+                VolumeRow()
+                SleepRow(ps.sleepMinutes, ps.sleepEndAt, vm::setSleep)
+                AuthorLine()
             }
         }
-        if (st.homepage.startsWith("http")) {
-            val ctx = LocalContext.current
-            Text(
-                "打開電台官方網站",
-                fontSize = 17.sp,
-                color = RC.Gold,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(top = 2.dp, bottom = 4.dp)
-                    .clickable {
-                        runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(st.homepage))) }
+    }
+}
+
+/** 節目來源：兩欄排列（地區、語言、音質、資料），官方網站是右上角的小按鈕 */
+@Composable
+private fun SourceCard(st: com.archiekuo.radio.model.Station) {
+    val ctx = LocalContext.current
+    val cells = listOf("地區" to st.place, "語言" to st.languageZh, "音質" to st.quality, "資料" to (if (st.curated) "精選" else "公開資料庫"))
+        .filter { it.second.isNotBlank() }
+    Column(
+        Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .goldCard(RoundedCornerShape(18.dp))
+            .padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
+    ) {
+        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("節目來源", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = RC.Gold, modifier = Modifier.weight(1f))
+            if (st.homepage.startsWith("http")) {
+                Text(
+                    "官方網站 ›", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = RC.Gold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .border(1.dp, RC.Gold.copy(alpha = 0.7f), RoundedCornerShape(14.dp))
+                        .clickable { runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(st.homepage))) } }
+                        .padding(horizontal = 12.dp, vertical = 5.dp),
+                )
+            }
+        }
+        cells.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                row.forEach { (k, v) ->
+                    Column(Modifier.weight(1f)) {
+                        Text(k, fontSize = 14.sp, color = RC.Sub)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(v, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                            if (k == "資料" && st.curated) {
+                                Text(
+                                    "已實測", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = RC.GreenText,
+                                    modifier = Modifier.padding(start = 6.dp).clip(RoundedCornerShape(8.dp)).background(RC.GreenText.copy(alpha = 0.15f)).padding(horizontal = 7.dp, vertical = 1.dp),
+                                )
+                            }
+                        }
                     }
-                    .padding(vertical = 8.dp),
-            )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
     }
 }
@@ -234,8 +235,9 @@ private fun VolumeRow() {
     }
 }
 
+/** 睡眠定時：一排（設定後在按鈕上顯示剩幾分鐘） */
 @Composable
-private fun SleepCard(minutes: Int, endAt: Long, onSet: (Int) -> Unit) {
+private fun SleepRow(minutes: Int, endAt: Long, onSet: (Int) -> Unit) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(endAt) {
         while (endAt > 0) {
@@ -243,37 +245,19 @@ private fun SleepCard(minutes: Int, endAt: Long, onSet: (Int) -> Unit) {
             delay(1000)
         }
     }
-    Column(
+    val left = if (endAt > 0) ((endAt - now + 59_999) / 60_000).coerceAtLeast(0) else 0
+    Row(
         Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             .fillMaxWidth()
-            .goldCard(RoundedCornerShape(20.dp))
-            .padding(14.dp),
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Bedtime, null, tint = RC.Gold, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("睡眠定時", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = RC.Gold)
-        }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        Icon(Icons.Rounded.Bedtime, null, tint = RC.Gold, modifier = Modifier.size(22.dp))
+        Text(if (endAt > 0) "剩${left}分" else "睡眠", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = RC.Gold, maxLines = 1, modifier = Modifier.padding(start = 4.dp, end = 8.dp))
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(0 to "關閉", 15 to "15分", 30 to "30分", 60 to "60分", 90 to "90分").forEach { (m, label) ->
                 Pill(label, minutes == m, { onSet(m) }, Modifier.weight(1f), hPad = 0.dp)
             }
         }
-        val left = if (endAt > 0) ((endAt - now + 59_999) / 60_000).coerceAtLeast(0) else 0
-        Text(
-            if (endAt > 0) "還有 $left 分鐘後自動停止" else "選好時間，時間到就會自動停止播放",
-            fontSize = 16.sp,
-            color = RC.Sub,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-        )
     }
 }

@@ -54,6 +54,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 這次打開 App 後，使用者有沒有選過電台（選過才顯示下方播放器） */
+    private val _opened = MutableStateFlow(false)
+    val opened: StateFlow<Boolean> = _opened
+
     /** 熱門排行（存在 cats 裡，key＝hot-國碼） */
     fun loadHot(cc: String, force: Boolean = false) {
         val key = "hot-$cc"
@@ -83,7 +87,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun play(s: Station, list: List<Station> = listOf(s)) = player.play(s, list)
+    fun play(s: Station, list: List<Station> = listOf(s)) { _opened.value = true; player.play(s, list) }
     fun toggle() = player.toggle()
     fun next() = player.next()
     fun previous() = player.previous()
@@ -91,6 +95,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 首頁大圖的「開始播放」：key 為空就接著播上次的電台（沒有就播熱門第一名），否則播該分類第一名 */
     fun playBanner(key: String? = null) {
+        _opened.value = true
         val st = playerState.value
         if (key == null) {
             if (st.isPlaying) return

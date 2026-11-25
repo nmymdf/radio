@@ -158,7 +158,9 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
                 }
             }
             if (!isPlayer) {
-                if (ps.station != null) {
+                // 選了電台（或正在播）才出現下方播放器
+                val opened by vm.opened.collectAsStateWithLifecycle()
+                if (ps.station != null && ps.station!!.name.isNotBlank() && (opened || ps.isPlaying || ps.buffering)) {
                     MiniPlayer(ps, onOpen = openPlayer, onToggle = vm::toggle, onPrev = vm::previous, onNext = vm::next)
                 }
                 BottomBar(tab) { i ->

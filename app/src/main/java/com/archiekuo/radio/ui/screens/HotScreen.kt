@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archiekuo.radio.model.Categories
 import com.archiekuo.radio.ui.components.FavButton
+import com.archiekuo.radio.ui.components.FlagButton
 import com.archiekuo.radio.ui.components.GoldPlayButton
 import com.archiekuo.radio.ui.components.LoadingBox
 import com.archiekuo.radio.ui.components.MessageBox
@@ -69,18 +70,7 @@ fun HotScreen(vm: MainViewModel, initialCc: String, onBack: (() -> Unit)?, onOpe
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Categories.hotCountries.chunked(3).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { (code, name) ->
-                                val on = code == cc
-                                val shape = RoundedCornerShape(16.dp)
-                                Box(
-                                    Modifier.weight(1f).height(56.dp).clip(shape)
-                                        .then(if (on) Modifier.background(GoldButtonBrush) else Modifier.background(Color(0x0FFFFFFF)).border(1.dp, RC.Gold.copy(alpha = 0.38f), shape))
-                                        .clickable(role = Role.Tab) { cc = code },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(name, fontSize = 21.sp, fontWeight = FontWeight.Bold, color = if (on) Color(0xFF1A1405) else Color.White)
-                                }
-                            }
+                            row.forEach { (code, name) -> FlagButton(code, name, code == cc, Modifier.weight(1f)) { cc = code } }
                         }
                     }
                 }

@@ -346,3 +346,42 @@ fun BottomBar(selected: Int, onSelect: (Int) -> Unit) {
         }
     }
 }
+
+/** 國旗圖片 */
+fun flagRes(cc: String): Int = when (cc) {
+    "TW" -> com.archiekuo.radio.R.drawable.flag_tw
+    "US" -> com.archiekuo.radio.R.drawable.flag_us
+    "GB" -> com.archiekuo.radio.R.drawable.flag_gb
+    "KR" -> com.archiekuo.radio.R.drawable.flag_kr
+    "JP" -> com.archiekuo.radio.R.drawable.flag_jp
+    else -> com.archiekuo.radio.R.drawable.flag_hk
+}
+
+/** 國家按鈕：小國旗＋國名（首頁、熱門頁、車機都用這個） */
+@Composable
+fun FlagButton(cc: String, name: String, selected: Boolean, modifier: Modifier, height: Dp = 58.dp, fontSize: Int = 20, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier
+            .height(height)
+            .clip(shape)
+            .then(
+                if (selected) Modifier.background(com.archiekuo.radio.ui.theme.GoldButtonBrush)
+                else Modifier.background(Color(0x0FFFFFFF)).border(1.dp, RC.Gold.copy(alpha = 0.4f), shape),
+            )
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        androidx.compose.foundation.Image(
+            androidx.compose.ui.res.painterResource(flagRes(cc)), null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(width = (fontSize * 1.5f).dp, height = (fontSize * 1.1f).dp)
+                .clip(RoundedCornerShape(3.dp))
+                .border(1.dp, Color(0x55FFFFFF), RoundedCornerShape(3.dp)),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(name, fontSize = fontSize.sp, fontWeight = FontWeight.Bold, color = if (selected) Color(0xFF1A1405) else Color.White, maxLines = 1)
+    }
+}
