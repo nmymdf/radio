@@ -65,6 +65,11 @@ object Categories {
             )
         }
         if (list.isNotEmpty()) all = list
+        loadFeatured(json)
+        list.isNotEmpty()
+    }.getOrDefault(false)
+
+    fun loadFeatured(json: String) = runCatching {
         JSONObject(json).optJSONObject("featured")?.let { f ->
             featured = f.keys().asSequence().associateWith { cc ->
                 val a = f.getJSONArray(cc)
@@ -81,8 +86,8 @@ object Categories {
                 }
             }
         }
-        list.isNotEmpty()
-    }.getOrDefault(false)
+        Unit
+    }
 
     /** 從電台的英文標籤猜它屬於哪一類（搜尋結果用來配圖） */
     fun guess(tags: String): String {

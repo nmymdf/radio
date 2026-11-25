@@ -57,7 +57,12 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null && app.store.autoPlay.value) app.player.autoResume()
         setContent {
             RadioTheme {
-                if (!car) AppRoot()
+                if (!car) {
+                    // 手機設定的字放很大時，畫面會被擠爆（電台名稱只剩幾個字）。
+                    // App 本身的字已經很大，系統字型放大最多只套用到 1.15 倍。
+                    val d = LocalDensity.current
+                    CompositionLocalProvider(LocalDensity provides Density(d.density, minOf(d.fontScale, 1.15f))) { AppRoot() }
+                }
                 else {
                     // 車機版照 1280×720 設計，依螢幕等比縮放
                     val cfg = LocalConfiguration.current

@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import coil.compose.AsyncImage
@@ -109,11 +110,13 @@ fun badgeText(name: String): String {
     val isHan = { c: Char -> Character.UnicodeScript.of(c.code) == Character.UnicodeScript.HAN }
     if (isHan(n.first())) return n.filter(isHan).take(2)
     val words = n.split(Regex("[^A-Za-z0-9]+")).filter { it.isNotBlank() }
-    val first = words.firstOrNull() ?: return n.filter(isHan).take(2).ifEmpty { "♪" }
+    // 開頭的單一數字或符號（例如「0 - Classic Rock」的 0）不要拿來當標章
+    val ws = words.dropWhile { it.length == 1 && it[0].isDigit() }.ifEmpty { words }
+    val first = ws.firstOrNull() ?: return n.filter(isHan).take(2).ifEmpty { "♪" }
     return when {
         first.length in 2..5 && first.all { it.isUpperCase() || it.isDigit() } -> first
         first.length <= 4 -> first.uppercase()
-        words.size >= 2 -> words.take(3).joinToString("") { it.first().uppercase() }
+        ws.size >= 2 -> ws.take(3).joinToString("") { it.first().uppercase() }
         else -> first.take(3).uppercase()
     }
 }
@@ -179,8 +182,9 @@ fun StationRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(86.dp)
-            .clickable(onClick = onClick),
+            .heightIn(min = 86.dp)
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -197,7 +201,8 @@ fun StationRow(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (current) RC.Gold else Color.White,
-                    maxLines = 1,
+                    maxLines = 2,
+                    lineHeight = 25.sp,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

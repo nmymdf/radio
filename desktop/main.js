@@ -77,11 +77,14 @@ const CATALOG_URL = 'https://raw.githubusercontent.com/nmymdf/radio/main/catalog
 const catalogCache = () => path.join(app.getPath('userData'), 'catalog.json');
 // 分類清單：先用存好的（或內建的），背景再到 GitHub 抓最新版，下次打開生效
 ipcMain.handle('catalog', async () => {
-  let text = null;
-  try { text = fs.readFileSync(catalogCache(), 'utf8'); JSON.parse(text).categories.length; } catch { text = null; }
-  if (!text) text = fs.readFileSync(path.join(__dirname, 'app', 'catalog.json'), 'utf8');
+  // 清單的檢查日期；沒有各國精選電台的舊清單當作最舊
+  const stamp = (t) => { try { const o = JSON.parse(t); return o.featured ? (o.featuredChecked || '0') : ''; } catch { return ''; } };
+  let cached = null;
+  try { cached = fs.readFileSync(catalogCache(), 'utf8'); JSON.parse(cached).categories.length; } catch { cached = null; }
+  const bundled = fs.readFileSync(path.join(__dirname, 'app', 'catalog.json'), 'utf8');
+  const text = cached && stamp(cached) >= stamp(bundled) ? cached : bundled;
   fetch(CATALOG_URL, { signal: AbortSignal.timeout(10000) }).then((r) => r.text()).then((t) => {
-    try { if (JSON.parse(t).categories.length) fs.writeFileSync(catalogCache(), t); } catch { /* 內容不對就不存 */ }
+    try { if (JSON.parse(t).categories.length && stamp(t) >= stamp(text)) fs.writeFileSync(catalogCache(), t); } catch { /* 內容不對就不存 */ }
   }).catch(() => {});
   return text;
 });
