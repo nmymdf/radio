@@ -30,7 +30,7 @@ def main():
     cands = json.load(open("tools/stations/candidates.json", encoding="utf-8"))
     featured, report = {}, []
     for cc, items in cands.items():
-        out = []
+        out, used = [], set()
         for it in items:
             seen, options = set(), []
             for term in it["terms"]:
@@ -42,15 +42,29 @@ def main():
                     for u in [x.get("url_resolved"), x.get("url")]:
                         if u and u not in seen:
                             seen.add(u); options.append((x, u))
-                if len(options) >= 12: break
-            # 點閱數高、位元率高的先試
-            options.sort(key=lambda o: (-(o[0].get("clickcount") or 0), -(o[0].get("bitrate") or 0)))
+                if len(options) >= 30: break
+            # 名稱越接近越先試（完全一樣 > 開頭一樣 > 包含），再看點閱數；排除副頻道
+            avoid = [a.lower() for a in it.get("avoid", [])]
+            def score(o):
+                n = o[0].get("name", "").strip().lower()
+                best = 3
+                for t in it["terms"]:
+                    t = t.lower()
+                    if n == t: best = min(best, 0)
+                    elif n.startswith(t): best = min(best, 1)
+                    elif t in n: best = min(best, 2)
+                dirty = 1 if ("#" in o[1] or " " in o[1]) else 0
+                return (dirty, best, -(o[0].get("clickcount") or 0), -(o[0].get("bitrate") or 0))
+            options = [o for o in options if not any(a in o[0].get("name", "").lower() for a in avoid)]
+            options = [o for o in options if o[1] not in used]
+            options.sort(key=score)
             ok = None
             for x, u in options[:12]:
                 if plays(u):
                     ok = (x, u); break
             if ok:
                 x, u = ok
+                used.add(u)
                 out.append({
                     "name": it["name"], "rbName": x.get("name", "").strip(), "url": u,
                     "favicon": x.get("favicon", ""), "homepage": x.get("homepage", ""),

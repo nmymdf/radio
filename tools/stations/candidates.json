@@ -1,80 +1,532 @@
 {
-  "TW": [
-    {"name": "ICRT", "terms": ["ICRT"]},
-    {"name": "飛碟電台", "terms": ["飛碟", "UFO Radio", "UFO"]},
-    {"name": "中廣流行網", "terms": ["i like radio", "中廣流行", "BCC Pop", "中廣"]},
-    {"name": "中廣新聞網", "terms": ["中廣新聞", "BCC News"]},
-    {"name": "警察廣播電台", "terms": ["警察廣播", "警廣", "Police Broadcasting"]},
-    {"name": "好事聯播網", "terms": ["好事", "Best Radio"]},
-    {"name": "Hit FM", "terms": ["Hit FM", "HitFM", "Hit Fm"]},
-    {"name": "台北愛樂", "terms": ["愛樂", "Philharmonic"]},
-    {"name": "教育廣播電台", "terms": ["教育廣播", "Education Radio", "NER"]},
-    {"name": "漢聲廣播電台", "terms": ["漢聲", "Voice of Han"]},
-    {"name": "亞洲電台", "terms": ["亞洲電台", "Asia FM", "Asia Radio"]},
-    {"name": "中央廣播電台", "terms": ["央廣", "Rti", "Radio Taiwan International", "中央廣播"]},
-    {"name": "寶島聯播網", "terms": ["寶島", "Formosa"]},
-    {"name": "大千電台", "terms": ["大千"]},
-    {"name": "正聲廣播", "terms": ["正聲", "Cheng Sheng"]},
-    {"name": "台北廣播電台", "terms": ["台北廣播", "Taipei Broadcasting"]},
-    {"name": "講客廣播", "terms": ["講客", "客家", "Hakka"]},
-    {"name": "環宇廣播", "terms": ["環宇", "Uni Radio"]},
-    {"name": "佳音電台", "terms": ["佳音", "Good News"]}
-  ],
-  "US": [
-    {"name": "NPR", "terms": ["NPR 24 Hour", "NPR News", "NPR"]},
-    {"name": "WNYC 紐約", "terms": ["WNYC"]},
-    {"name": "KQED 舊金山", "terms": ["KQED"]},
-    {"name": "KEXP 西雅圖", "terms": ["KEXP"]},
-    {"name": "KCRW 洛杉磯", "terms": ["KCRW"]},
-    {"name": "Jazz24", "terms": ["Jazz24"]},
-    {"name": "WBGO 爵士", "terms": ["WBGO"]},
-    {"name": "WQXR 古典", "terms": ["WQXR"]},
-    {"name": "KUSC 古典", "terms": ["KUSC"]},
-    {"name": "SomaFM Groove Salad", "terms": ["Groove Salad"]},
-    {"name": "SomaFM Secret Agent", "terms": ["Secret Agent"]},
-    {"name": "WSM 鄉村", "terms": ["WSM"]},
-    {"name": "181.fm 鄉村", "terms": ["Kickin' Country", "Kickin Country"]},
-    {"name": "181.fm 80 年代", "terms": ["Awesome 80"]},
-    {"name": "181.fm 老歌", "terms": ["Good Time Oldies"]},
-    {"name": "WFMU", "terms": ["WFMU"]}
-  ],
-  "GB": [
-    {"name": "BBC World Service", "terms": ["BBC World Service"]},
-    {"name": "BBC Radio 1", "terms": ["BBC Radio 1"]},
-    {"name": "BBC Radio 2", "terms": ["BBC Radio 2"]},
-    {"name": "BBC Radio 3", "terms": ["BBC Radio 3"]},
-    {"name": "BBC Radio 4", "terms": ["BBC Radio 4"]},
-    {"name": "Classic FM", "terms": ["Classic FM"]},
-    {"name": "LBC", "terms": ["LBC"]},
-    {"name": "Heart", "terms": ["Heart London", "Heart UK", "Heart"]},
-    {"name": "Capital", "terms": ["Capital FM", "Capital London", "Capital"]},
-    {"name": "Absolute Radio", "terms": ["Absolute Radio"]},
-    {"name": "Smooth Radio", "terms": ["Smooth Radio", "Smooth"]}
-  ],
-  "KR": [
-    {"name": "KBS Cool FM", "terms": ["KBS Cool", "KBS 2FM", "KBS"]},
-    {"name": "KBS Classic FM", "terms": ["KBS Classic", "KBS 1FM"]},
-    {"name": "MBC FM4U", "terms": ["MBC FM4U", "MBC FM", "MBC"]},
-    {"name": "SBS Power FM", "terms": ["SBS Power", "SBS"]},
-    {"name": "CBS Music FM", "terms": ["CBS Music", "CBS"]},
-    {"name": "Arirang Radio", "terms": ["Arirang"]},
-    {"name": "TBS eFM", "terms": ["TBS eFM", "eFM"]}
-  ],
-  "JP": [
-    {"name": "NHK 第一", "terms": ["NHK Radio 1", "NHK R1", "NHK第1", "NHK"]},
-    {"name": "NHK FM", "terms": ["NHK FM", "NHK-FM"]},
-    {"name": "J-Pop Powerplay", "terms": ["J-Pop Powerplay", "Powerplay"]},
-    {"name": "Japan Hits", "terms": ["Japan Hits", "J-Pop"]},
-    {"name": "Shonan Beach FM", "terms": ["Shonan Beach"]},
-    {"name": "InterFM", "terms": ["InterFM"]}
-  ],
-  "HK": [
-    {"name": "香港電台第一台", "terms": ["RTHK Radio 1", "RTHK 1", "香港電台第一台"]},
-    {"name": "香港電台第二台", "terms": ["RTHK Radio 2", "RTHK 2", "香港電台第二台"]},
-    {"name": "香港電台第四台", "terms": ["RTHK Radio 4", "RTHK 4", "香港電台第四台"]},
-    {"name": "香港電台第五台", "terms": ["RTHK Radio 5", "RTHK 5", "香港電台第五台"]},
-    {"name": "香港電台普通話台", "terms": ["Putonghua", "普通話"]},
-    {"name": "商業電台", "terms": ["Commercial Radio", "商業電台", "881", "903"]},
-    {"name": "新城電台", "terms": ["Metro Radio", "新城"]}
-  ]
+ "TW": [
+  {
+   "name": "ICRT",
+   "terms": [
+    "ICRT"
+   ]
+  },
+  {
+   "name": "飛碟電台",
+   "terms": [
+    "飛碟",
+    "UFO Radio",
+    "UFO"
+   ]
+  },
+  {
+   "name": "中廣流行網",
+   "terms": [
+    "i like radio",
+    "I Like Radio",
+    "中廣流行",
+    "流行網"
+   ],
+   "avoid": [
+    "新聞"
+   ]
+  },
+  {
+   "name": "中廣新聞網",
+   "terms": [
+    "中廣新聞網",
+    "中廣新聞"
+   ],
+   "avoid": [
+    "流行"
+   ]
+  },
+  {
+   "name": "警察廣播電台",
+   "terms": [
+    "警察廣播",
+    "警廣",
+    "Police Broadcasting"
+   ]
+  },
+  {
+   "name": "好事聯播網",
+   "terms": [
+    "好事",
+    "Best Radio"
+   ]
+  },
+  {
+   "name": "Hit FM",
+   "terms": [
+    "HitFM",
+    "Hit FM",
+    "HIT FM",
+    "Hit Fm",
+    "台北之音"
+   ]
+  },
+  {
+   "name": "台北愛樂",
+   "terms": [
+    "愛樂電台",
+    "台北愛樂",
+    "Philharmonic Radio",
+    "Taipei Philharmonic",
+    "Philharmonic"
+   ]
+  },
+  {
+   "name": "教育廣播電台",
+   "terms": [
+    "教育廣播",
+    "教育電台",
+    "國立教育",
+    "National Education Radio",
+    "Educational Radio"
+   ]
+  },
+  {
+   "name": "漢聲廣播電台",
+   "terms": [
+    "漢聲",
+    "Voice of Han"
+   ]
+  },
+  {
+   "name": "亞洲電台",
+   "terms": [
+    "亞洲電台",
+    "Asia FM",
+    "Asia Radio"
+   ]
+  },
+  {
+   "name": "中央廣播電台",
+   "terms": [
+    "央廣",
+    "Rti",
+    "Radio Taiwan International",
+    "中央廣播"
+   ]
+  },
+  {
+   "name": "寶島聯播網",
+   "terms": [
+    "寶島",
+    "Formosa"
+   ]
+  },
+  {
+   "name": "大千電台",
+   "terms": [
+    "大千"
+   ]
+  },
+  {
+   "name": "正聲廣播",
+   "terms": [
+    "正聲",
+    "Cheng Sheng"
+   ]
+  },
+  {
+   "name": "台北廣播電台",
+   "terms": [
+    "台北廣播",
+    "Taipei Broadcasting"
+   ]
+  },
+  {
+   "name": "講客廣播",
+   "terms": [
+    "講客",
+    "客家",
+    "Hakka"
+   ]
+  },
+  {
+   "name": "環宇廣播",
+   "terms": [
+    "環宇",
+    "Uni Radio"
+   ]
+  },
+  {
+   "name": "佳音電台",
+   "terms": [
+    "佳音",
+    "Good News"
+   ]
+  }
+ ],
+ "US": [
+  {
+   "name": "NPR",
+   "terms": [
+    "NPR 24 Hour",
+    "NPR News",
+    "NPR"
+   ]
+  },
+  {
+   "name": "WNYC 紐約",
+   "terms": [
+    "WNYC"
+   ]
+  },
+  {
+   "name": "KQED 舊金山",
+   "terms": [
+    "KQED"
+   ]
+  },
+  {
+   "name": "KEXP 西雅圖",
+   "terms": [
+    "KEXP"
+   ]
+  },
+  {
+   "name": "KCRW 洛杉磯",
+   "terms": [
+    "KCRW"
+   ]
+  },
+  {
+   "name": "Jazz24",
+   "terms": [
+    "Jazz24"
+   ]
+  },
+  {
+   "name": "WBGO 爵士",
+   "terms": [
+    "WBGO"
+   ]
+  },
+  {
+   "name": "WQXR 古典",
+   "terms": [
+    "WQXR"
+   ]
+  },
+  {
+   "name": "KUSC 古典",
+   "terms": [
+    "KUSC"
+   ]
+  },
+  {
+   "name": "SomaFM Groove Salad",
+   "terms": [
+    "Groove Salad"
+   ]
+  },
+  {
+   "name": "SomaFM Secret Agent",
+   "terms": [
+    "Secret Agent",
+    "SomaFM Secret"
+   ]
+  },
+  {
+   "name": "WSM 鄉村",
+   "terms": [
+    "WSM"
+   ]
+  },
+  {
+   "name": "181.fm 鄉村",
+   "terms": [
+    "Kickin' Country",
+    "Kickin Country"
+   ]
+  },
+  {
+   "name": "181.fm 80 年代",
+   "terms": [
+    "Awesome 80"
+   ]
+  },
+  {
+   "name": "181.fm 老歌",
+   "terms": [
+    "Good Time Oldies"
+   ]
+  },
+  {
+   "name": "WFMU",
+   "terms": [
+    "WFMU"
+   ]
+  }
+ ],
+ "GB": [
+  {
+   "name": "BBC World Service",
+   "terms": [
+    "BBC World Service"
+   ]
+  },
+  {
+   "name": "BBC Radio 1",
+   "terms": [
+    "BBC Radio 1"
+   ]
+  },
+  {
+   "name": "BBC Radio 2",
+   "terms": [
+    "BBC Radio 2"
+   ]
+  },
+  {
+   "name": "BBC Radio 3",
+   "terms": [
+    "BBC Radio 3"
+   ]
+  },
+  {
+   "name": "BBC Radio 4",
+   "terms": [
+    "BBC Radio 4"
+   ]
+  },
+  {
+   "name": "Classic FM",
+   "terms": [
+    "Classic FM"
+   ]
+  },
+  {
+   "name": "LBC",
+   "terms": [
+    "LBC"
+   ]
+  },
+  {
+   "name": "Heart",
+   "terms": [
+    "Heart UK",
+    "Heart London",
+    "Heart"
+   ],
+   "avoid": [
+    "80",
+    "70",
+    "90",
+    "00",
+    "Dance",
+    "Xmas",
+    "Christmas",
+    "Love"
+   ]
+  },
+  {
+   "name": "Capital",
+   "terms": [
+    "Capital FM",
+    "CAPITAL",
+    "Capital London"
+   ],
+   "avoid": [
+    "XTRA",
+    "Dance",
+    "Chill",
+    "Anthems"
+   ]
+  },
+  {
+   "name": "Absolute Radio",
+   "terms": [
+    "Absolute Radio"
+   ],
+   "avoid": [
+    "80",
+    "70",
+    "90",
+    "00",
+    "10",
+    "Classic",
+    "Country"
+   ]
+  },
+  {
+   "name": "Smooth Radio",
+   "terms": [
+    "Smooth Radio",
+    "Smooth UK",
+    "Smooth"
+   ],
+   "avoid": [
+    "Chill",
+    "Country",
+    "70",
+    "80",
+    "Xmas",
+    "Christmas"
+   ]
+  }
+ ],
+ "KR": [
+  {
+   "name": "KBS Cool FM",
+   "terms": [
+    "KBS Cool",
+    "KBS 2FM",
+    "KBS"
+   ]
+  },
+  {
+   "name": "KBS Classic FM",
+   "terms": [
+    "KBS Classic",
+    "KBS 1FM"
+   ]
+  },
+  {
+   "name": "MBC FM4U",
+   "terms": [
+    "MBC FM4U",
+    "MBC FM",
+    "MBC"
+   ]
+  },
+  {
+   "name": "SBS Power FM",
+   "terms": [
+    "SBS Power",
+    "SBS"
+   ]
+  },
+  {
+   "name": "CBS Music FM",
+   "terms": [
+    "CBS Music",
+    "CBS"
+   ]
+  },
+  {
+   "name": "Arirang Radio",
+   "terms": [
+    "Arirang"
+   ]
+  },
+  {
+   "name": "TBS eFM",
+   "terms": [
+    "TBS eFM",
+    "eFM"
+   ]
+  }
+ ],
+ "JP": [
+  {
+   "name": "NHK World 國際台",
+   "terms": [
+    "NHK WORLD RADIO",
+    "NHK World",
+    "NHK"
+   ],
+   "name2": null,
+   "avoid": []
+  },
+  {
+   "name": "NHK FM",
+   "terms": [
+    "NHK FM",
+    "NHK-FM"
+   ]
+  },
+  {
+   "name": "J-Pop Powerplay",
+   "terms": [
+    "J-Pop Powerplay",
+    "Powerplay"
+   ]
+  },
+  {
+   "name": "Japan Hits",
+   "terms": [
+    "Japan Hits",
+    "J-Pop Hits",
+    "JPop"
+   ],
+   "avoid": [
+    "Christmas",
+    "Xmas"
+   ]
+  },
+  {
+   "name": "Shonan Beach FM",
+   "terms": [
+    "Shonan Beach"
+   ]
+  },
+  {
+   "name": "InterFM",
+   "terms": [
+    "InterFM"
+   ]
+  }
+ ],
+ "HK": [
+  {
+   "name": "香港電台第一台",
+   "terms": [
+    "RTHK Radio 1",
+    "RTHK 1",
+    "香港電台第一台"
+   ]
+  },
+  {
+   "name": "香港電台第二台",
+   "terms": [
+    "RTHK Radio 2",
+    "RTHK 2",
+    "香港電台第二台"
+   ]
+  },
+  {
+   "name": "香港電台第四台",
+   "terms": [
+    "RTHK Radio 4",
+    "RTHK 4",
+    "香港電台第四台"
+   ]
+  },
+  {
+   "name": "香港電台第五台",
+   "terms": [
+    "RTHK Radio 5",
+    "RTHK 5",
+    "香港電台第五台"
+   ]
+  },
+  {
+   "name": "香港電台普通話台",
+   "terms": [
+    "RTHK Putonghua",
+    "普通話台",
+    "Putonghua",
+    "RTHK PTH"
+   ]
+  },
+  {
+   "name": "商業電台",
+   "terms": [
+    "CRHK",
+    "Commercial Radio",
+    "商業電台",
+    "雷霆881",
+    "叱咤903",
+    "881",
+    "903"
+   ]
+  },
+  {
+   "name": "新城電台",
+   "terms": [
+    "Metro Radio",
+    "新城"
+   ],
+   "avoid": []
+  }
+ ]
 }
