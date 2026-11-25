@@ -32,6 +32,15 @@ import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,17 +61,72 @@ import com.archiekuo.radio.player.PlayerState
 import com.archiekuo.radio.ui.theme.GoldButtonBrush
 import com.archiekuo.radio.ui.theme.RC
 
+/**
+ * 電台封面：有台標就顯示台標（白底），沒有或太小就顯示「名稱標章」
+ * （電台名稱前兩個字，每台顏色不同），一眼就分得出是哪一台。
+ */
 @Composable
-fun StationArt(station: Station, size: Dp, corner: Dp = 12.dp) {
-    Image(
-        painterResource(Categories.byKey(station.categoryKey).art),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
+fun StationArt(station: Station, size: Dp, corner: Dp = 12.dp, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(corner)
+    var logoOk by remember(station.favicon) { mutableStateOf(false) }
+    Box(
+        modifier
             .size(size)
-            .clip(RoundedCornerShape(corner))
-            .border(1.dp, RC.Gold.copy(alpha = 0.35f), RoundedCornerShape(corner)),
-    )
+            .clip(shape)
+            .border(1.dp, RC.Gold.copy(alpha = 0.45f), shape),
+    ) {
+        StationBadge(station.name, Modifier.fillMaxSize(), size)
+        if (station.favicon.startsWith("http")) {
+            val ctx = LocalContext.current
+            Box(Modifier.fillMaxSize().then(if (logoOk) Modifier.background(Color(0xFFF8F4EA)) else Modifier)) {
+                AsyncImage(
+                    model = ImageRequest.Builder(ctx).data(station.favicon).crossfade(true).size(256).build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    onSuccess = { st ->
+                        // 太小的圖示（例如 16×16）放大會糊，改用名稱標章
+                        val d = st.result.drawable
+                        logoOk = d.intrinsicWidth >= 48 && d.intrinsicHeight >= 48
+                    },
+                    onError = { logoOk = false },
+                    alpha = if (logoOk) 1f else 0f,
+                    modifier = Modifier.fillMaxSize().padding(size * 0.08f),
+                )
+            }
+        }
+    }
+}
+
+private val badgeColors = listOf(
+    0xFF2B3A8C to 0xFF141B4D, 0xFF7A2E3B to 0xFF3A1220, 0xFF1F6B5C to 0xFF0C2E28, 0xFF6B4A1F to 0xFF2E1E0A,
+    0xFF4B2E7A to 0xFF1F1238, 0xFF1F557A to 0xFF0B2236, 0xFF7A5A1F to 0xFF362508, 0xFF5C2E5C to 0xFF26102A,
+)
+
+/** 名稱標章上的字：中文取前兩個字；英文取縮寫（BBC、NPR、ICRT） */
+fun badgeText(name: String): String {
+    val n = name.trim()
+    if (n.isEmpty()) return "♪"
+    val isHan = { c: Char -> Character.UnicodeScript.of(c.code) == Character.UnicodeScript.HAN }
+    if (isHan(n.first())) return n.filter(isHan).take(2)
+    val words = n.split(Regex("[^A-Za-z0-9]+")).filter { it.isNotBlank() }
+    val first = words.firstOrNull() ?: return n.filter(isHan).take(2).ifEmpty { "♪" }
+    return when {
+        first.length in 2..5 && first.all { it.isUpperCase() || it.isDigit() } -> first
+        first.length <= 4 -> first.uppercase()
+        words.size >= 2 -> words.take(3).joinToString("") { it.first().uppercase() }
+        else -> first.take(3).uppercase()
+    }
+}
+
+@Composable
+fun StationBadge(name: String, modifier: Modifier, size: Dp) {
+    val (a, b) = badgeColors[(name.lowercase().hashCode() and 0x7fffffff) % badgeColors.size]
+    val t = badgeText(name)
+    val k = when (t.length) { 1, 2 -> 0.34f; 3 -> 0.27f; 4 -> 0.22f; else -> 0.19f }
+    val fs = with(LocalDensity.current) { (size * k).toSp() }
+    Box(modifier.background(Brush.linearGradient(listOf(Color(a), Color(b)))), contentAlignment = Alignment.Center) {
+        Text(t, fontSize = fs, fontWeight = FontWeight.Black, color = RC.Gold, maxLines = 1, softWrap = false)
+    }
 }
 
 @Composable

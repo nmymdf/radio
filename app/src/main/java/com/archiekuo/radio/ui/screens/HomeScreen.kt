@@ -61,6 +61,7 @@ fun HomeScreen(
     onCategory: (String) -> Unit,
     onAllCategories: () -> Unit,
     onOpenPlayer: () -> Unit,
+    onHot: (String) -> Unit = {},
 ) {
     Column(
         Modifier
@@ -93,19 +94,20 @@ fun HomeScreen(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 14.dp),
         )
 
-        SectionHeader(Icons.Rounded.LocalFireDepartment, "熱門電台", onAllCategories)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        // 熱門電台：各國排行（一排三個國家）
+        SectionHeader(Icons.Rounded.LocalFireDepartment, "熱門電台") { onHot("TW") }
+        Column(
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Categories.hotStations.forEach { c ->
-                HotCard(c, Modifier.weight(1f)) { onCategory(c.key) }
+            Categories.hotCountries.chunked(3).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { (cc, name) -> CountryCard(cc, name, Modifier.weight(1f)) { onHot(cc) } }
+                }
             }
         }
 
-        SectionHeader(Icons.Rounded.MusicNote, "音樂分類", onAllCategories)
+        SectionHeader(Icons.Rounded.MusicNote, "音樂分類") { Categories.music.firstOrNull()?.let { onCategory(it.key) } ?: onAllCategories() }
         Column(
             Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -152,6 +154,24 @@ private fun TalkCard(c: Category, modifier: Modifier, onClick: () -> Unit) {
         Icon(talkIcon(c.key), null, tint = RC.Gold, modifier = Modifier.size(42.dp))
         Spacer(Modifier.height(6.dp))
         Text(c.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
+    }
+}
+
+/** 首頁的國家卡：國名＋該國前兩名精選大台 */
+@Composable
+private fun CountryCard(cc: String, name: String, modifier: Modifier, onClick: () -> Unit) {
+    val top = Categories.featured[cc].orEmpty().take(2).joinToString("、") { it.name }
+    Column(
+        modifier
+            .height(100.dp)
+            .goldCard(RoundedCornerShape(16.dp), Brush.verticalGradient(listOf(Color(0xFF2B3672), Color(0xFF121A46))))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(name, fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
+        if (top.isNotEmpty()) Text(top, fontSize = 16.sp, color = RC.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
     }
 }
 

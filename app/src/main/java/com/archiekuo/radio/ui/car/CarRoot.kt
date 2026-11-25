@@ -44,6 +44,7 @@ import com.archiekuo.radio.model.Categories
 import com.archiekuo.radio.model.Category
 import com.archiekuo.radio.model.Station
 import com.archiekuo.radio.player.PlayerState
+import com.archiekuo.radio.ui.components.StationArt
 import com.archiekuo.radio.ui.components.AuthorLine
 import com.archiekuo.radio.ui.components.Backdrop
 import com.archiekuo.radio.ui.components.CircleIconButton
@@ -52,6 +53,7 @@ import com.archiekuo.radio.ui.components.PlayRing
 import com.archiekuo.radio.ui.components.StatusLine
 import com.archiekuo.radio.ui.components.goldCard
 import com.archiekuo.radio.ui.screens.CategoryScreen
+import com.archiekuo.radio.ui.screens.HotScreen
 import com.archiekuo.radio.ui.screens.FavoritesScreen
 import com.archiekuo.radio.ui.screens.HistoryScreen
 import com.archiekuo.radio.ui.screens.MineScreen
@@ -76,6 +78,7 @@ fun CarRoot(vm: MainViewModel = viewModel()) {
     var tab by rememberSaveable { mutableStateOf(Tab.HOME) }
     var catKey by rememberSaveable { mutableStateOf("classical") }
     var mineSub by rememberSaveable { mutableStateOf("") }
+    var hotCc by rememberSaveable { mutableStateOf("") }
     val ps by vm.playerState.collectAsStateWithLifecycle()
     val favs by vm.favorites.collectAsStateWithLifecycle()
 
@@ -85,17 +88,22 @@ fun CarRoot(vm: MainViewModel = viewModel()) {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
-    BackHandler(enabled = tab != Tab.HOME || mineSub.isNotEmpty()) {
-        if (mineSub.isNotEmpty()) mineSub = "" else tab = Tab.HOME
+    BackHandler(enabled = tab != Tab.HOME || mineSub.isNotEmpty() || hotCc.isNotEmpty()) {
+        when {
+            mineSub.isNotEmpty() -> mineSub = ""
+            hotCc.isNotEmpty() -> hotCc = ""
+            else -> tab = Tab.HOME
+        }
     }
 
     Backdrop {
         Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Rail(tab) { t -> tab = t; mineSub = "" }
+            Rail(tab) { t -> tab = t; mineSub = ""; hotCc = "" }
             NowPlaying(ps, ps.station?.let { s -> favs.any { it.id == s.id } } == true, vm, Modifier.width(470.dp).fillMaxHeight())
             Box(Modifier.weight(1f).fillMaxHeight().goldCard(RoundedCornerShape(24.dp)).padding(vertical = 4.dp)) {
                 when (tab) {
-                    Tab.HOME -> CarHome { k -> catKey = k; tab = Tab.CATS }
+                    Tab.HOME -> if (hotCc.isNotEmpty()) HotScreen(vm, hotCc, onBack = { hotCc = "" }, onOpenPlayer = {})
+                    else CarHome(onHot = { hotCc = it }) { k -> catKey = k; tab = Tab.CATS }
                     Tab.CATS -> CategoryScreen(vm, catKey, onSearch = { tab = Tab.SEARCH }, onOpenPlayer = {})
                     Tab.FAV -> FavoritesScreen(vm, onOpenPlayer = {})
                     Tab.SEARCH -> SearchScreen(vm, onBack = { tab = Tab.HOME }, onOpenPlayer = {})
@@ -151,10 +159,7 @@ private fun NowPlaying(ps: PlayerState, fav: Boolean, vm: MainViewModel, modifie
             return@Column
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            Image(
-                painterResource(Categories.byKey(st.categoryKey).art), "電台封面", contentScale = ContentScale.Crop,
-                modifier = Modifier.size(170.dp).shadow(20.dp, RoundedCornerShape(22.dp), ambientColor = RC.Gold, spotColor = RC.Gold).goldCard(RoundedCornerShape(22.dp), borderAlpha = 0.5f),
-            )
+            StationArt(st, 170.dp, 22.dp, Modifier.shadow(20.dp, RoundedCornerShape(22.dp), ambientColor = RC.Gold, spotColor = RC.Gold))
             Column(Modifier.weight(1f)) {
                 Text(st.name, fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 3, overflow = TextOverflow.Ellipsis, lineHeight = 37.sp)
                 Spacer(Modifier.height(10.dp))
@@ -212,9 +217,23 @@ private fun BigButton(text: String, icon: ImageVector, on: Boolean, modifier: Mo
 
 /** 右半首頁：大方塊分類 */
 @Composable
-private fun CarHome(onCategory: (String) -> Unit) {
-    val sections = listOf("熱門電台" to Categories.hotStations, "音樂分類" to Categories.music, "講話節目" to Categories.talkHome)
+private fun CarHome(onHot: (String) -> Unit, onCategory: (String) -> Unit) {
+    val sections = listOf("音樂分類" to Categories.music, "講話節目" to Categories.talkHome)
     LazyVerticalGrid(GridCells.Fixed(12), Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        // 熱門電台：各國排行，一排三個
+        item(span = { GridItemSpan(12) }) {
+            Text("熱門電台", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 4.dp, start = 4.dp))
+        }
+        items(Categories.hotCountries, key = { "hot-${it.first}" }, span = { GridItemSpan(4) }) { (cc, name) ->
+            val top = Categories.featured[cc].orEmpty().take(2).joinToString("、") { it.name }
+            Column(
+                Modifier.height(110.dp).goldCard(RoundedCornerShape(18.dp)).clickable(role = Role.Button) { onHot(cc) }.padding(horizontal = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+            ) {
+                Text(name, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                if (top.isNotEmpty()) Text(top, fontSize = 17.sp, color = RC.Gold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
         sections.forEach { (title, list) ->
             if (list.isEmpty()) return@forEach
             item(span = { GridItemSpan(12) }) {

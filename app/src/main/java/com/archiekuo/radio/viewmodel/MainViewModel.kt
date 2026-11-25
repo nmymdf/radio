@@ -54,6 +54,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 熱門排行（存在 cats 裡，key＝hot-國碼） */
+    fun loadHot(cc: String, force: Boolean = false) {
+        val key = "hot-$cc"
+        val cur = _cats.value[key]
+        if (!force && (cur is Load.Ok || cur is Load.Loading)) return
+        _cats.update { it + (key to Load.Loading) }
+        viewModelScope.launch {
+            val r = runCatching { repo.hot(cc, force) }
+            _cats.update { it + (key to r.fold({ l -> Load.Ok(l) }, { e -> Load.Err(friendly(e)) })) }
+        }
+    }
+
     fun setQuery(q: String) { _query.value = q }
 
     fun runSearch(q: String = _query.value) {

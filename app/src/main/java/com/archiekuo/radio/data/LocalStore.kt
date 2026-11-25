@@ -15,6 +15,7 @@ fun Station.toJson(): JSONObject = JSONObject().apply {
     put("cc", countryCode); put("codec", codec); put("br", bitrate); put("tags", tags)
     put("hls", hls); put("votes", votes); put("cat", categoryKey)
     put("state", state); put("lang", language); put("home", homepage); put("cur", curated)
+    put("icon", favicon)
 }
 
 fun stationFromJson(o: JSONObject) = Station(
@@ -23,6 +24,7 @@ fun stationFromJson(o: JSONObject) = Station(
     bitrate = o.optInt("br"), tags = o.optString("tags"), hls = o.optBoolean("hls"),
     votes = o.optInt("votes"), categoryKey = o.optString("cat", "hot"),
     state = o.optString("state"), language = o.optString("lang"), homepage = o.optString("home"), curated = o.optBoolean("cur"),
+    favicon = o.optString("icon"),
 )
 
 /** 收藏、播放紀錄、設定都存在手機裡 */

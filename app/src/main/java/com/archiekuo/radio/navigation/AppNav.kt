@@ -39,6 +39,7 @@ import com.archiekuo.radio.ui.screens.CategoryScreen
 import com.archiekuo.radio.ui.screens.FavoritesScreen
 import com.archiekuo.radio.ui.screens.HistoryScreen
 import com.archiekuo.radio.ui.screens.HomeScreen
+import com.archiekuo.radio.ui.screens.HotScreen
 import com.archiekuo.radio.ui.screens.MineScreen
 import com.archiekuo.radio.ui.screens.PlayerScreen
 import com.archiekuo.radio.ui.screens.SearchScreen
@@ -54,6 +55,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val SEARCH = "search"
     const val PLAYER = "player"
+    const val HOT = "hot"
 }
 
 @Composable
@@ -80,10 +82,17 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
     }
     val isPlayer = route == Routes.PLAYER
 
-    fun goTab(r: String) = nav.navigate(r) {
-        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    fun goTab(r: String) {
+        // 首頁：一律直接回到首頁最上面（之前會把分類畫面還原回來，看起來按不回去）
+        if (r == Routes.HOME) {
+            if (!nav.popBackStack(Routes.HOME, inclusive = false)) nav.navigate(Routes.HOME) { launchSingleTop = true }
+            return
+        }
+        nav.navigate(r) {
+            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
     fun goCategory(key: String) = nav.navigate("${Routes.CATEGORIES}?key=$key") {
         popUpTo(nav.graph.findStartDestination().id)
@@ -118,7 +127,14 @@ fun AppRoot(vm: MainViewModel = viewModel()) {
                             onCategory = ::goCategory,
                             onAllCategories = { goTab(Routes.CATEGORIES) },
                             onOpenPlayer = openPlayer,
+                            onHot = { cc -> open("${Routes.HOT}?cc=$cc") },
                         )
+                    }
+                    composable(
+                        "${Routes.HOT}?cc={cc}",
+                        arguments = listOf(navArgument("cc") { type = NavType.StringType; defaultValue = "TW" }),
+                    ) {
+                        HotScreen(vm, it.arguments?.getString("cc") ?: "TW", back, openPlayer)
                     }
                     composable(
                         "${Routes.CATEGORIES}?key={key}",

@@ -29,6 +29,14 @@ object Categories {
         private set
 
     val hotStations get() = all.filter { it.home == "hot" }
+
+    /** 熱門排行的國家（依使用者指定的順序） */
+    val hotCountries = listOf("TW" to "台灣", "US" to "美國", "GB" to "英國", "KR" to "韓國", "JP" to "日本", "HK" to "香港")
+
+    /** 各國精選大台：雲端每週實測過、確定能播的（catalog.json 的 featured） */
+    @Volatile
+    var featured: Map<String, List<Station>> = emptyMap()
+        private set
     val music get() = all.filter { it.home == "music" }
     val talkHome get() = all.filter { it.home == "talk" }
     fun inGroup(g: String) = all.filter { it.group == g }
@@ -57,6 +65,22 @@ object Categories {
             )
         }
         if (list.isNotEmpty()) all = list
+        JSONObject(json).optJSONObject("featured")?.let { f ->
+            featured = f.keys().asSequence().associateWith { cc ->
+                val a = f.getJSONArray(cc)
+                (0 until a.length()).mapNotNull { i ->
+                    val s = a.getJSONObject(i)
+                    val url = s.optString("url")
+                    if (url.isBlank()) null else Station(
+                        id = s.optString("uuid").ifBlank { url }, name = s.optString("name"), url = url,
+                        countryCode = cc, codec = s.optString("codec"), bitrate = s.optInt("bitrate"),
+                        tags = s.optString("tags"), hls = s.optBoolean("hls"), categoryKey = "hot",
+                        state = s.optString("state"), language = s.optString("language"),
+                        homepage = s.optString("homepage"), curated = true, favicon = s.optString("favicon"),
+                    )
+                }
+            }
+        }
         list.isNotEmpty()
     }.getOrDefault(false)
 

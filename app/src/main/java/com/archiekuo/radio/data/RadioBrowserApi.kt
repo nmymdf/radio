@@ -68,6 +68,8 @@ class RadioBrowserApi {
                 state = o.optString("state"),
                 language = o.optString("language"),
                 homepage = o.optString("homepage"),
+                favicon = o.optString("favicon").trim(),
+                clicks = o.optInt("clickcount"),
             )
         }
         return out
@@ -82,6 +84,11 @@ class RadioBrowserApi {
             val q = spec.filterKeys { it != "limit" }.entries.joinToString("&") { "${it.key}=${enc(it.value)}" }
             parse(get("/json/stations/search?$q&hidebroken=true&order=votes&reverse=true&limit=$limit"), cat)
         }
+    }
+
+    /** 某個國家實際收聽次數最多的電台 */
+    suspend fun popular(cc: String, limit: Int = 80) = withContext(Dispatchers.IO) {
+        parse(get("/json/stations/search?countrycode=${enc(cc)}&hidebroken=true&order=clickcount&reverse=true&limit=$limit"), "hot")
     }
 
     suspend fun byName(q: String, limit: Int = 60) = withContext(Dispatchers.IO) {

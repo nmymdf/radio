@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archiekuo.radio.model.Categories
+import com.archiekuo.radio.ui.components.StationArt
 import com.archiekuo.radio.ui.components.AuthorLine
 import com.archiekuo.radio.ui.components.CircleIconButton
 import com.archiekuo.radio.ui.components.MessageBox
@@ -102,15 +103,11 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
             return@Column
         }
 
-        Image(
-            painterResource(Categories.byKey(st.categoryKey).art),
-            contentDescription = "電台封面",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
+        StationArt(
+            st, 240.dp, 26.dp,
+            Modifier
                 .padding(top = 22.dp, bottom = 20.dp)
-                .size(240.dp)
-                .shadow(36.dp, RoundedCornerShape(26.dp), ambientColor = RC.Gold, spotColor = RC.Gold)
-                .goldCard(RoundedCornerShape(26.dp), borderAlpha = 0.5f),
+                .shadow(36.dp, RoundedCornerShape(26.dp), ambientColor = RC.Gold, spotColor = RC.Gold),
         )
 
         Text(
