@@ -3,7 +3,7 @@ OK   TW 飛碟電台  ←  飛碟聯播網 飛碟電台  https://n10.rcs.revma.c
 OK   TW 中廣流行網  ←  中廣流行網  https://n03.rcs.revma.com/aw9uqyxy2tzuv
 OK   TW 中廣新聞網  ←  中廣新聞網  https://n03.rcs.revma.com/78fm9wyy2tzuv
 OK   TW 警察廣播電台  ←  警察廣播電臺 - 全國治安交通網 FM 104.9  https://stream.pbs.gov.tw/live/PBS/playlist.m3u8
-OK   TW 好事聯播網  ←  好事聯播網 蓮花電台  http://202.39.43.67:1935/live/RA000011/chunklist.m3u8
+OK   TW 好事聯播網  ←  好事聯播網 高雄港都  http://202.39.43.67:1935/live/RA000012/chunklist.m3u8
 MISS TW Hit FM  （找到 0 個網址，都播不出來）
 MISS TW 台北愛樂  （找到 0 個網址，都播不出來）
 MISS TW 教育廣播電台  （找到 0 個網址，都播不出來）
@@ -29,7 +29,7 @@ OK   US KUSC 古典  ←  KUSC  https://playerservices.streamtheworld.com/api/li
 OK   US SomaFM Groove Salad  ←  Soma FM Groove Salad 320K AAC HLS  https://hls.somafm.com/hls/groovesalad/320k/program.m3u8
 MISS US SomaFM Secret Agent  （找到 8 個網址，都播不出來）
 OK   US WSM 鄉村  ←  WSM 650 Nashville, TN  http://stream01048.westreamradio.com/wsm-am-mp3
-OK   US 181.fm 鄉村  ←  Kickin Country 104.9  https://ice24.securenetsystems.net/WWKC?playSessionID=426A3439-F802-AB34-B26FD241D2991F78&type=.mp3&autoPlay=true
+OK   US 181.fm 鄉村  ←  181.FM - Kickin' Country  https://listen.181fm.com/181-kickincountry_128k.mp3
 OK   US 181.fm 80 年代  ←  181.FM - Awesome 80's  https://listen.181fm.com/181-awesome80s_128k.mp3
 OK   US 181.fm 老歌  ←  181.FM - Good Time Oldies Radio  http://listen.181fm.com/181-goodtime_128k.mp3
 OK   US WFMU  ←  WFMU  http://stream0.wfmu.org/freeform-high.aac

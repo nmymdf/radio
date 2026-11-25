@@ -701,17 +701,17 @@
    },
    {
     "name": "好事聯播網",
-    "rbName": "好事聯播網 蓮花電台",
-    "url": "http://202.39.43.67:1935/live/RA000011/chunklist.m3u8",
-    "favicon": "https://cooltv.top/logo/best935.webp",
-    "homepage": "http://www.bestradio.com.tw/",
+    "rbName": "好事聯播網 高雄港都",
+    "url": "http://202.39.43.67:1935/live/RA000012/chunklist.m3u8",
+    "favicon": "https://cooltv.top/logo/best983.webp",
+    "homepage": "https://www.apple-line.com/",
     "tags": "music",
     "language": "chinese",
     "codec": "UNKNOWN",
     "bitrate": 0,
     "hls": true,
     "state": "",
-    "uuid": "ddf57d7f-e140-4f8d-b3c3-4932563c9ff0"
+    "uuid": "a945e7f7-0122-4bc0-8868-c6ae162c66ea"
    },
    {
     "name": "漢聲廣播電台",
@@ -1011,17 +1011,17 @@
    },
    {
     "name": "181.fm 鄉村",
-    "rbName": "Kickin Country 104.9",
-    "url": "https://ice24.securenetsystems.net/WWKC?playSessionID=426A3439-F802-AB34-B26FD241D2991F78&type=.mp3&autoPlay=true",
+    "rbName": "181.FM - Kickin' Country",
+    "url": "https://listen.181fm.com/181-kickincountry_128k.mp3",
     "favicon": "",
-    "homepage": "https://yourradioplace.com/wwkc-fm-kc105/",
-    "tags": "",
-    "language": "",
-    "codec": "AAC",
-    "bitrate": 32,
+    "homepage": "http://www.181.fm/",
+    "tags": "country,pop,rock,waynesboro",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
     "hls": false,
-    "state": "Ohio",
-    "uuid": "59581046-3a1b-4978-91e8-d114036c0869"
+    "state": "Virginia",
+    "uuid": "960d4bdc-0601-11e8-ae97-52543be04c81"
    },
    {
     "name": "181.fm 80 年代",
