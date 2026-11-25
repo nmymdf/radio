@@ -1,0 +1,66 @@
+OK   TW ICRT  ←  Radio ICRT  https://n27a-eu.rcs.revma.com/nkdfurztxp3vv
+OK   TW 飛碟電台  ←  飛碟聯播網 飛碟電台  https://n10.rcs.revma.com/em90w4aeewzuv
+OK   TW 中廣流行網  ←  中廣新聞網  https://n03.rcs.revma.com/78fm9wyy2tzuv
+OK   TW 中廣新聞網  ←  中廣新聞網  https://n03.rcs.revma.com/78fm9wyy2tzuv
+OK   TW 警察廣播電台  ←  警察廣播電臺 - 全國治安交通網 FM 104.9  https://stream.pbs.gov.tw/live/PBS/playlist.m3u8
+OK   TW 好事聯播網  ←  人人電台 好事聯播網FM98.9  http://202.39.43.67:1935/live/RA000013/chunklist.m3u8
+MISS TW Hit FM  （找到 0 個網址，都播不出來）
+MISS TW 台北愛樂  （找到 0 個網址，都播不出來）
+MISS TW 教育廣播電台  （找到 0 個網址，都播不出來）
+OK   TW 漢聲廣播電台  ←  漢聲中波  http://202.39.43.67:1935/live/RA000074/chunklist.m3u8
+OK   TW 亞洲電台  ←  AsiaFM 亞洲電台  https://n13.rcs.revma.com/xpgtqc74hv8uv
+OK   TW 中央廣播電台  ←  RTI 臺灣之音  https://streamak0138.akamaized.net/live0138lh-mbm9/_definst_/rti3/chunklist.m3u8
+OK   TW 寶島聯播網  ←  寶島聯播網  http://125.227.87.206:8000/FM98.5
+OK   TW 大千電台  ←  大千電台  http://taiwan-radio.tw:8000/ML.FM97.1
+OK   TW 正聲廣播  ←  正聲廣播電台FM104  https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/chunklist_w872521607.m3u8
+OK   TW 台北廣播電台  ←  台北廣播電台  https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/fm/playlist.m3u8
+OK   TW 講客廣播  ←  講客廣播電台  https://n08.rcs.revma.com/akqrbx94gbkvv
+OK   TW 環宇廣播  ←  環宇廣播電台  https://n06.rcs.revma.com/srn5f9kmwxhvv
+OK   TW 佳音電台  ←  佳音經典音樂網  https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/classic/playlist.m3u8
+OK   US NPR  ←  NPR 24 Hour Program Stream  http://npr-ice.streamguys1.com/live.mp3
+OK   US WNYC 紐約  ←  WNYC 93.9 FM  http://fm939.wnyc.org/wnycfm.aac
+OK   US KQED 舊金山  ←  88.5 KQED  https://streams.kqed.org/kqedradio?onsite=true
+OK   US KEXP 西雅圖  ←  KEXP  https://kexp.streamguys1.com/kexp160.aac?listenerid=f4bcb5c771d830fbdd4195088a946ea6&awparams=companionAds%3Atrue
+OK   US KCRW 洛杉磯  ←  KCRW NEWS24  https://streams.kcrw.com/news24_mp3
+OK   US Jazz24  ←  Jazz24  https://knkx-live-a.edge.audiocdn.com/6285_256k
+OK   US WBGO 爵士  ←  WBGO Jazz 88.3 FM  https://ais-sa8.cdnstream1.com/3629_128.mp3
+OK   US WQXR 古典  ←  WQXR  https://stream.wqxr.org/wqxr-web?nyprBrowserId=32c67956bf1d5600
+OK   US KUSC 古典  ←  Classical KUSC  https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCAAC64.aac
+OK   US SomaFM Groove Salad  ←  Soma FM Groove Salad 320K AAC HLS  https://hls.somafm.com/hls/groovesalad/320k/program.m3u8
+MISS US SomaFM Secret Agent  （找到 8 個網址，都播不出來）
+OK   US WSM 鄉村  ←  WSM 650 Nashville, TN  http://stream01048.westreamradio.com/wsm-am-mp3
+OK   US 181.fm 鄉村  ←  181.FM - Kickin' Country  https://listen.181fm.com/181-kickincountry_128k.mp3
+OK   US 181.fm 80 年代  ←  181.FM - Awesome 80's  https://listen.181fm.com/181-awesome80s_128k.mp3
+OK   US 181.fm 老歌  ←  181.FM - Good Time Oldies Radio  http://listen.181fm.com/181-goodtime_128k.mp3
+OK   US WFMU  ←  WFMU  http://stream0.wfmu.org/freeform-high.aac
+OK   GB BBC World Service  ←  BBC World Service  https://stream.live.vc.bbcmedia.co.uk/bbc_world_service
+OK   GB BBC Radio 1  ←  BBC Radio 1  http://a.files.bbci.co.uk/ms6/live/3441A116-B12E-4D2F-ACA8-C1984642FA4B/audio/simulcast/hls/nonuk/pc_hd_abr_v2/ak/bbc_radio_one.m3u8
+OK   GB BBC Radio 2  ←  BBC Radio 2 (128k)  http://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8
+OK   GB BBC Radio 3  ←  BBC Radio 3 (128k)  http://as-hls-ww-live.akamaized.net/pool_23461179/live/ww/bbc_radio_three/bbc_radio_three.isml/bbc_radio_three-audio%3d128000.norewind.m3u8
+OK   GB BBC Radio 4  ←  BBC Radio 4  http://as-hls-ww-live.akamaized.net/pool_55057080/live/ww/bbc_radio_fourfm/bbc_radio_fourfm.isml/bbc_radio_fourfm-audio=320000.norewind.m3u8
+OK   GB Classic FM  ←  Classic FM HD  https://ice-sov.musicradio.com/ClassicFMHD?hdauth=:2000000000:a290d4b39a16153061d4c743008b9fe8d424a7e5ec6469d40acf51fdcd336e80
+OK   GB LBC  ←  LBC Radio  http://media-sov.musicradio.com/LBC973MP3Low
+OK   GB Heart  ←  Heart 80s  https://media-ssl.musicradio.com/Heart80sMP3
+OK   GB Capital  ←  CAPITAL - The UK's No.1 Hit Music Station  https://media-ssl.musicradio.com/CapitalUK
+OK   GB Absolute Radio  ←  Absolute Radio  http://stream-ar.planetradio.co.uk/absoluteradiohigh.aac??direct=true&aw_0_1st.playerid=BMUK_Airable&aw_0_1st.skey=6778249992&aw_0_1st.bauer_loggedin=true%20#EXTINF:0,Absolute%2080s
+OK   GB Smooth Radio  ←  Smooth Chill  https://media-ssl.musicradio.com/ChillMP3
+MISS KR KBS Cool FM  （找到 12 個網址，都播不出來）
+MISS KR KBS Classic FM  （找到 6 個網址，都播不出來）
+OK   KR MBC FM4U  ←  MBC Munhwa Bangsong FM 4U  http://211.33.246.4:32954/radio_fm/myStream.sdp/playlist.m3u8
+MISS KR SBS Power FM  （找到 4 個網址，都播不出來）
+OK   KR CBS Music FM  ←  CBS 음악 FM  https://m-aac.cbs.co.kr/cbs939/_definst_/cbs939.stream/playlist.m3u8
+OK   KR Arirang Radio  ←  Arirang Radio  http://amdlive-ch03-ctnd-com.akamaized.net/arirang_3ch/arirang_3ch_audio/chunklist_b128000.m3u8
+OK   KR TBS eFM  ←  TBS eFM 101.3  https://cdnefm.tbs.seoul.kr/tbs/_definst_/tbs_efm_web_360.smil/chunklist.m3u8
+OK   JP NHK 第一  ←  NHK WORLD RADIO  https://nhkworld-radio.nhkworld.jp/hls/live/nhkworld-radio-media2/index.m3u8
+MISS JP NHK FM  （找到 1 個網址，都播不出來）
+OK   JP J-Pop Powerplay  ←  J-Pop Powerplay Kawaii(asia dream radio)  https://kathy.torontocast.com:3060/;?shoutcast
+OK   JP Japan Hits  ←  J-Pop Christmas  https://cast3.torontocast.com:1170/;
+OK   JP Shonan Beach FM  ←  Shonan Beach FM 78.9  http://shonanbeachfm.out.airtime.pro:8000/shonanbeachfm_a
+MISS JP InterFM  （找到 0 個網址，都播不出來）
+OK   HK 香港電台第一台  ←  香港電台第一台  https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/index_64_a.m3u8
+OK   HK 香港電台第二台  ←  RTHK radio 2  https://rthkaudio2-lh.akamaihd.net/i/radio2_1@355865/index_56_a-p.m3u8
+OK   HK 香港電台第四台  ←  香港電台第四台  https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/index_64_a.m3u8
+OK   HK 香港電台第五台  ←  香港電台第五台  https://rthkradio5-live.akamaized.net/hls/live/2040081/radio5/index_64_a.m3u8
+MISS HK 香港電台普通話台  （找到 0 個網址，都播不出來）
+MISS HK 商業電台  （找到 0 個網址，都播不出來）
+OK   HK 新城電台  ←  香港新城电台财经台  https://1716664847.rsc.cdn77.org/1716664847/tracks-a1/mono.ts.m3u8
