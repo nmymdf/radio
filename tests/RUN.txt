@@ -1,1 +1,1 @@
-emulator-test.sh
+radio-test.sh
