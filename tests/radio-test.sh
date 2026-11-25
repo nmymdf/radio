@@ -50,3 +50,4 @@ tapText "台灣"
 shot u05-熱門台灣 12
 adb shell settings put system font_scale 1.0
 adb logcat -d -b crash > $OUT/crash-log.txt || true
+# rerun 1795609926
