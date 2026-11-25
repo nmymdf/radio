@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Bedtime
@@ -84,7 +85,9 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
     // 剛好一整頁：內容依螢幕高度平均分配；螢幕太矮（或字很大）才可以往下滑
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val pageH = maxHeight
-        val cover = (pageH * 0.26f).coerceIn(150.dp, 240.dp)
+        val cover = (pageH * 0.26f).coerceIn(120.dp, 240.dp)
+        val dens = androidx.compose.ui.platform.LocalDensity.current
+        var headerH by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(76.dp) }
         Column(
             Modifier
                 .fillMaxWidth()
@@ -95,6 +98,7 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .onSizeChanged { headerH = with(dens) { it.height.toDp() } }
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -116,7 +120,8 @@ fun PlayerScreen(vm: MainViewModel, onBack: () -> Unit) {
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    // 不用 weight：內容比螢幕高時要能撐開往下滑，而不是被擠扁
+                    .heightIn(min = (pageH - headerH).coerceAtLeast(0.dp))
                     .padding(bottom = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly,

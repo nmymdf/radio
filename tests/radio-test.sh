@@ -35,11 +35,15 @@ run() {
   shot ${tag}2-熱門美國 12
   tapText "NPR"
   shot ${tag}3-播放頁一整頁 12
+  adb shell input swipe 540 1300 540 500 500
+  shot ${tag}3b-播放頁往下滑 2
   adb shell input keyevent 4
   shot ${tag}4-有下方播放器 3
 }
 adb shell wm size 1080x2340
 adb shell wm density 440
+sleep 3
+adb shell wm size; adb shell wm density
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put system user_rotation 0
 adb install -r -g apks/radio.apk
@@ -47,6 +51,11 @@ adb shell settings put system font_scale 1.0
 run a
 adb shell settings put system font_scale 1.6
 run b
+# 模擬一般高手機（dp 高度約 770）看是否剛好一整頁
+adb shell settings put system font_scale 1.0
+adb shell wm density 300
+sleep 3
+run t
 adb shell settings put system font_scale 1.0
 adb shell wm size reset
 adb shell wm density reset
