@@ -30,7 +30,7 @@ data class Station(
     val place: String get() = listOf(countryZh, state.trim()).filter { it.isNotBlank() }.distinct().joinToString(" ・ ")
 
     /** 音質：128 kbps ・ MP3 */
-    val quality: String get() = listOf(if (bitrate > 0) "$bitrate kbps" else "", codec.uppercase()).filter { it.isNotBlank() }.joinToString(" ・ ")
+    val quality: String get() = listOf(if (bitrate > 0) "$bitrate kbps" else "", codec.uppercase().takeIf { it != "UNKNOWN" } ?: "").filter { it.isNotBlank() }.joinToString(" ・ ").ifBlank { "依電台而定" }
 
     /** 資料來源 */
     val sourceText: String get() = if (curated) "精選電台（已實測可播放）" else "Radio Browser 公開資料庫"
