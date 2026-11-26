@@ -199,7 +199,7 @@ class CarApp : Application() {
 
     /** 呼叫系統隱藏的功能（舊版 Android 允許） */
     private fun hidden(cls: Class<*>, name: String, vararg types: Class<*>): java.lang.reflect.Method? = runCatching {
-        val getDeclared = Class::class.java.getDeclaredMethod("getDeclaredMethod", String::class.java, Array<Class<*>>::class.java)
+        val getDeclared = Class::class.java.getDeclaredMethod("getDeclaredMethod", String::class.java, arrayOf<Class<*>>()::class.java)
         (getDeclared.invoke(cls, name, types) as java.lang.reflect.Method).also { it.isAccessible = true }
     }.getOrNull()
 
