@@ -55,5 +55,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("androidx.webkit:webkit:1.12.1")
-    implementation("org.mozilla.geckoview:geckoview:161.0.20261118180411")
+    implementation("org.mozilla.geckoview:geckoview:131.0.20241011205646")
 }
