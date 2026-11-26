@@ -12,8 +12,8 @@ android {
         applicationId = "com.archiekuo.carhome"
         minSdk = 21
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.6"
+        versionCode = 7
+        versionName = "0.6.1"
         // 車機是 ARM；雲端模擬器測試另外打包 x86_64（-Pabis=x86_64）
         ndk { abiFilters += (project.findProperty("abis") as String? ?: "arm64-v8a,armeabi-v7a").split(",") }
     }
@@ -24,6 +24,12 @@ android {
             keyAlias = "carhome"
             keyPassword = "archiekuo"
         }
+    }
+    // full＝有自帶網頁引擎（大）；lite＝精簡版（小，用車機內建網頁元件）
+    flavorDimensions += "engine"
+    productFlavors {
+        create("full") { dimension = "engine" }
+        create("lite") { dimension = "engine"; versionNameSuffix = "-精簡" }
     }
     buildTypes {
         release {
@@ -55,5 +61,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("androidx.webkit:webkit:1.12.1")
-    implementation("org.mozilla.geckoview:geckoview:131.0.20241011205646")
+    "fullImplementation"("org.mozilla.geckoview:geckoview:131.0.20241011205646")
 }
