@@ -99,16 +99,17 @@ adb shell am force-stop com.google.android.youtube
 home
 shot 06-開了小窗功能-桌面 15
 adb logcat -c
-for n in 1 2 3; do
+for n in 1 2 3 4; do
   adb shell am force-stop com.google.android.youtube
   home; sleep 3
   tap 1060 380
-  shot 07-方法$n 3
-  shot 08-方法$n-8秒後 8
+  shot 07-第${n}次點照片-3秒後 3
+  shot 08-第${n}次點照片-訊息 1
   ytmode B$n
 done
-# 固定方法後再按
-adb shell am force-stop com.google.android.youtube
-home; sleep 3
+tapText "設定"; sleep 3
+adb shell input swipe 640 600 640 380 500
+shot 09-設定-自動記住方法 2
+back
 adb logcat -d -s CarHomeYT:* > $OUT/yt-log.txt
 adb logcat -d -b crash > $OUT/crash-log.txt || true
