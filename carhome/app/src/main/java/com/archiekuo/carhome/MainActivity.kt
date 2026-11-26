@@ -164,6 +164,17 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) applyBars(app.prefs.hideStatus.value)
     }
 
+    override fun onStart() {
+        super.onStart()
+        app.yt.onHomeShown()
+    }
+
+    override fun onStop() {
+        // 離開桌面（開了別的 App）：YouTube 變浮動小視窗繼續播
+        app.yt.onHomeHidden()
+        super.onStop()
+    }
+
     override fun onPause() {
         app.homeVisible = false
         super.onPause()

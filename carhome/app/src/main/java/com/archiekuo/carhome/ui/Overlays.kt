@@ -103,6 +103,8 @@ data class SettingsModel(
     val black: Boolean = false,
     val shieldLeft: Boolean = false,
     val memText: String = "",
+    val ytAutoFloat: Boolean = true,
+    val ytEngine: String = "",
 )
 
 @Composable
@@ -112,14 +114,19 @@ fun SettingsPanel(
     onAutoFm: (Boolean) -> Unit, onPickFm: () -> Unit, onYt: (Boolean) -> Unit, onViz: (Boolean) -> Unit, onVizTempo: (Boolean) -> Unit,
     onHideStatus: (Boolean) -> Unit, onBlack: (Boolean) -> Unit = {}, onOverlay: () -> Unit, onPermissions: () -> Unit, onDefaultHome: () -> Unit, onResetTiles: () -> Unit,
     onShieldLeft: (Boolean) -> Unit = {}, onMemory: () -> Unit = {},
+    onYtAutoFloat: (Boolean) -> Unit = {}, onYtEngine: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     PanelFrame("車機桌面設定", onBack) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 120.dp)) {
             Group("發動車子後") {
                 SwitchRow("自動播網路收音機", "接著播上次的電台（會先等網路連上）", m.autoRadio, onAutoRadio)
-                SwitchRow("自動打開神盾", "打開後自動回到桌面，神盾變成懸浮視窗；你隨時可以自己關掉", m.autoShield, onAutoShield)
+                SwitchRow("自動打開神盾", "預設關閉：要用時按下方「神盾」方塊自己打開（神盾說話會讓 YouTube 暫停）", m.autoShield, onAutoShield)
                 ActionRow("神盾 App", m.shieldLabel, onPickShield)
+            }
+            Group("YouTube") {
+                SwitchRow("離開桌面時變成浮動小視窗", "開導航或其他 App 時，YouTube 縮成右下角小視窗繼續播（可拖曳）", m.ytAutoFloat, onYtAutoFloat)
+                ActionRow("網頁引擎（點一下切換）", m.ytEngine, onYtEngine)
             }
             Group("收音機") {
                 SwitchRow("沒網路時自動切 FM", "網路收音機斷網超過 10 秒，改開原廠 FM；網路恢復再切回來", m.autoFm, onAutoFm)
@@ -137,7 +144,7 @@ fun SettingsPanel(
                 ActionRow("記憶體與背景 App", m.memText.ifBlank { "查看" }, onMemory)
             }
             Group("權限與桌面") {
-                ActionRow("允許顯示在其他 App 上層", if (m.overlayOk) "已允許" else "尚未允許（自動開神盾需要）", onOverlay)
+                ActionRow("允許顯示在其他 App 上層", if (m.overlayOk) "已允許" else "尚未允許（YouTube 浮動、神盾需要）", onOverlay)
                 ActionRow("位置、錄音、音樂檔案權限", "重新詢問", onPermissions)
                 ActionRow("設為預設桌面", "打開系統設定", onDefaultHome)
             }

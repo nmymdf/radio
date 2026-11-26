@@ -12,8 +12,10 @@ android {
         applicationId = "com.archiekuo.carhome"
         minSdk = 21
         targetSdk = 34
-        versionCode = 5
-        versionName = "0.5"
+        versionCode = 6
+        versionName = "0.6"
+        // 車機是 ARM；雲端模擬器測試另外打包 x86_64（-Pabis=x86_64）
+        ndk { abiFilters += (project.findProperty("abis") as String? ?: "arm64-v8a,armeabi-v7a").split(",") }
     }
     signingConfigs {
         create("release") {
@@ -52,4 +54,6 @@ dependencies {
     implementation("androidx.media3:media3-session:1.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.google.guava:guava:33.3.1-android")
+    implementation("androidx.webkit:webkit:1.12.1")
+    implementation("org.mozilla.geckoview:geckoview:161.0.20261118180411")
 }

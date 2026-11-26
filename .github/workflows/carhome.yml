@@ -22,15 +22,29 @@ jobs:
         with:
           gradle-version: "8.9"
       - name: Build
-        run: gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee ../build-log.txt; exit ${PIPESTATUS[0]}
-      - name: Publish APK to apk-car branch
+        run: |
+          set -o pipefail
+          VER=$(grep versionName app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          mkdir -p ../out
+          # 車機用（ARM）
+          gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee ../build-log.txt
+          cp app/build/outputs/apk/release/app-release.apk "../out/carhome-v${VER}.apk"
+          # 雲端模擬器測試用（x86_64）
+          gradle :app:assembleRelease -Pabis=x86_64 --no-daemon 2>&1 | tail -5 | tee -a ../build-log.txt
+          cp app/build/outputs/apk/release/app-release.apk "../out/carhome-test-x86_64.apk"
+          ls -la ../out | tee -a ../build-log.txt
+      - name: Publish APK to release and apk-car branch
         if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VER=$(grep versionName app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
-          mkdir ../out && cp app/build/outputs/apk/release/app-release.apk "../out/carhome-v${VER}.apk"
-          cd ../out && git init -q && git checkout -q -b apk-car
+          gh release delete carhome-latest -y --cleanup-tag || true
+          gh release create carhome-latest ../out/*.apk --title "車機桌面" --notes "build ${GITHUB_SHA}" --target "${GITHUB_SHA}"
+          mkdir ../branch && cd ../branch && git init -q && git checkout -q -b apk-car
           git config user.name "github-actions" && git config user.email "actions@github.com"
           echo "build ${GITHUB_SHA}" > BUILD.txt
+          echo "carhome-v${VER}.apk" > RELEASE.txt
           git add . && git commit -qm "Car Home APK v${VER}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk-car
       - name: Publish build log on failure

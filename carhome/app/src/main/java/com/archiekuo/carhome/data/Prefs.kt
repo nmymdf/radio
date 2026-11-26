@@ -38,8 +38,8 @@ class Prefs(ctx: Context) {
     val recentSongs = StrPref("recentSongs", "")
     /** 發動後自動播網路收音機 */
     val autoRadio = BoolPref("autoRadio", true)
-    /** 發動後自動開神盾 */
-    val autoShield = BoolPref("autoShield", true)
+    /** 發動後自動開神盾（v0.6 起預設不開，讓使用者自己決定） */
+    val autoShield = BoolPref("autoShield06", false)
     val shieldPkg = StrPref("shieldPkg", "")
     /** 沒網路時自動切 FM */
     val autoFm = BoolPref("autoFm", true)
@@ -58,6 +58,13 @@ class Prefs(ctx: Context) {
     val mode = StrPref("mode", "radio")
     /** YouTube 平常顯示的照片：lake、cafe、taipei、zen、black，或 file:路徑 */
     val ytPhoto = StrPref("ytPhoto", "lake")
+    /** YouTube 網頁引擎：auto（自動）、system（車機內建）、gecko（App 自帶） */
+    val ytEngine = StrPref("ytEngine", "auto")
+    /** 離開桌面時 YouTube 自動變成浮動小視窗 */
+    val ytAutoFloat = BoolPref("ytAutoFloat", true)
+    /** 浮動小視窗的位置（-1＝預設右下角） */
+    val floatX = IntPref("floatX", -1)
+    val floatY = IntPref("floatY", -1)
     /** YouTube 上次的網址 */
     val ytUrl = StrPref("ytUrl", "https://m.youtube.com")
 

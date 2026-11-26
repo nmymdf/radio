@@ -35,6 +35,8 @@ class CarApp : Application() {
     lateinit var local: LocalMusicRemote
     lateinit var nav: NavInfo
     val viz = VisualizerEngine()
+    /** 桌面上的 YouTube 播放器（小格／全畫面／浮動） */
+    lateinit var yt: com.archiekuo.carhome.yt.YtController
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     /** 畫面上方的大字提示（3 秒後消失） */
@@ -67,6 +69,7 @@ class CarApp : Application() {
         radio = RadioRemote(this)
         local = LocalMusicRemote(this, prefs)
         nav = NavInfo(this, scope)
+        yt = com.archiekuo.carhome.yt.YtController(this)
         com.archiekuo.carhome.ui.Look.black = prefs.black.value
         scope.launch { prefs.black.flow.collect { com.archiekuo.carhome.ui.Look.black = it } }
         scope.launch { apps.refresh() }
@@ -184,23 +187,20 @@ class CarApp : Application() {
     /** 桌面是不是在最前面（不在的話，提示改用系統提示，蓋在其他 App 上也看得到） */
     @Volatile var homeVisible = false
 
-    // ---- YouTube：直接打開車機上的 YouTube App ----
+    // ---- YouTube：桌面自己的播放器（小格、全畫面、浮動小視窗） ----
     fun youtubePackage(): String? =
         apps.findByPackages("com.google.android.youtube", "app.revanced.android.youtube", "com.vanced.android.youtube", "com.google.android.apps.youtube.music")?.pkg
             ?: apps.findByLabel("YouTube")?.pkg
 
-    fun openYouTube() {
-        val p = youtubePackage() ?: run { say("車機上找不到 YouTube App"); return }
-        if (!apps.launch(p)) say("YouTube 打不開，請再試一次")
+    /** 打開 YouTube（預設全畫面；從小格按的就留在小格） */
+    fun openYouTube(full: Boolean = false) {
+        yt.start(if (full) com.archiekuo.carhome.yt.YtController.Mode.FULL else com.archiekuo.carhome.yt.YtController.Mode.CARD)
     }
 
-    /** 語音說的關鍵字交給 YouTube App 搜尋 */
+    /** 語音說的關鍵字：在桌面的 YouTube 裡搜尋 */
     fun searchYouTube(q: String) {
-        val p = youtubePackage() ?: run { say("車機上找不到 YouTube App"); return }
-        val search = Intent(Intent.ACTION_SEARCH).setPackage(p).putExtra(android.app.SearchManager.QUERY, q).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val view = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode(q))).setPackage(p).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val ok = runCatching { startActivity(search); true }.getOrDefault(false) || runCatching { startActivity(view); true }.getOrDefault(false)
-        if (!ok) { apps.launch(p); say("請在 YouTube 裡搜尋：$q") }
+        yt.search(q)
+        say("YouTube 搜尋：$q")
     }
 
     /** 移除 App；原廠內建的不能移除，改成打開 App 資訊讓使用者停用 */
