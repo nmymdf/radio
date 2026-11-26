@@ -1,6 +1,6 @@
 #!/bin/bash
 # 雲端模擬車機測試（Android 10、橫向 1280x720）— 作者：ArchieKUO
-# 測試 車機桌面 v0.5
+# 測試 車機桌面 v0.6（整體回歸測試）
 set -x
 OUT=results
 mkdir -p $OUT
@@ -108,12 +108,11 @@ tap 200 467
 shot 06-詳細天氣 8
 back
 
-# ---- YouTube：點照片 → 打開 YouTube App ----
+# ---- YouTube：點照片 → 在小格裡看，再關掉 ----
 tap 1060 380
-shot 07a-點YouTube-打開App 10
-adb shell dumpsys activity activities | grep -E "mResumedActivity" > $OUT/youtube-activity.txt || true
-home
-shot 07b-首頁回桌面 4
+shot 07a-點YouTube-小格 15
+tapText "關閉"
+shot 07b-關掉回照片 3
 
 # ---- 全黑 → 午夜藍（之前會閃） ----
 tap 819 618
