@@ -1,1 +1,1 @@
-emulator-test.sh
+car-win-test.sh
