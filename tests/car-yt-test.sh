@@ -69,12 +69,13 @@ VID="https://m.youtube.com/watch?v=aqz-KE-bpKQ"
 # YouTube 在雲端機房會要求登入（擋機器人），播放測試改用一般影片檔
 # 在測試機器上自己架一個小網站：有畫面計時器＋聲音的影片
 mkdir -p www
-ffmpeg -loglevel error -f lavfi -i "testsrc=size=640x360:rate=25:duration=300" -f lavfi -i "sine=frequency=440:duration=300" -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -shortest www/v.mp4
+# 模擬器沒有喇叭（-noaudio），有聲音的影片在自帶引擎會卡住，所以測試用無聲影片
+ffmpeg -loglevel error -f lavfi -i "testsrc=size=640x360:rate=25:duration=300" -c:v libx264 -preset veryfast -pix_fmt yuv420p www/v.mp4
 cat > www/t.html <<'HTML'
 <!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>test</title></head>
-<body style="margin:0;background:#000"><video id="v" src="v.mp4" autoplay controls playsinline loop style="width:100%"></video>
-<div id="s" style="color:#fff;font:bold 28px sans-serif;padding:8px"></div>
-<script>setInterval(function(){var v=document.getElementById('v');document.getElementById('s').textContent=(v.paused?'PAUSED ':'PLAYING ')+v.currentTime.toFixed(1)+'s hidden='+document.hidden;},500);</script>
+<body style="margin:0;background:#000"><div id="s" style="color:#ff0;font:bold 40px sans-serif;padding:6px;text-align:center">...</div>
+<video id="v" src="v.mp4" autoplay muted controls playsinline loop style="width:100%"></video>
+<script>setInterval(function(){var v=document.getElementById('v');document.getElementById('s').textContent=(v.paused?'PAUSED ':'PLAY ')+v.currentTime.toFixed(0)+'s';},500);</script>
 </body></html>
 HTML
 (cd www && python3 -m http.server 8000 >/dev/null 2>&1 &)
@@ -123,7 +124,8 @@ adb logcat -c
 adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_url "$MP4"
 sleep 20
 if ! playing | grep -q "playing=true"; then adb shell input tap 1060 380; sleep 8; fi
-shot 06-小格-影片播放中 2
+shot 06a-小格-影片播放中 2
+shot 06b-小格-5秒後 5
 echo "card mp4: $(playing)" | tee -a $OUT/state.txt
 tapText "放大"
 shot 07-全畫面-影片 6
@@ -147,7 +149,8 @@ adb shell am start -n com.archiekuo.radio/.MainActivity
 sleep 10
 tapText "熱門推薦"; sleep 6
 adb shell input tap 900 300; sleep 10
-shot 10-浮動在收音機上-收音機也在播 2
+shot 10a-浮動在收音機上-收音機也在播 2
+shot 10b-浮動-5秒後 5
 adb shell dumpsys audio | grep -A8 "Audio Focus stack" > $OUT/audio-focus-float.txt
 echo "float over radio: $(playing)" | tee -a $OUT/state.txt
 # 按小視窗的「放大」
@@ -191,3 +194,4 @@ adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_engine au
 adb logcat -d -s CarHomeYT:* > $OUT/yt-log-all.txt
 adb logcat -d -b crash > $OUT/crash-log.txt || true
 adb logcat -d | grep -iE "gecko|chromium" | tail -80 > $OUT/engine-log.txt
+pkill -f "http.server 8000" || true
