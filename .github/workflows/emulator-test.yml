@@ -13,11 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Get APKs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir apks
           git fetch --depth 1 origin apk apk-car
           git show origin/apk:$(git ls-tree --name-only origin/apk | grep "\.apk$") > apks/radio.apk
-          git show origin/apk-car:$(git ls-tree --name-only origin/apk-car | grep "\.apk$") > apks/carhome.apk
+          if git ls-tree --name-only origin/apk-car | grep -q "\.apk$"; then
+            git show origin/apk-car:$(git ls-tree --name-only origin/apk-car | grep "\.apk$" | head -1) > apks/carhome.apk
+          else
+            gh release download carhome-latest -p "carhome-test-x86_64.apk" -O apks/carhome.apk
+          fi
           ls -la apks; git ls-tree --name-only origin/apk-car
       - name: Enable KVM
         run: |
