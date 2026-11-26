@@ -67,7 +67,18 @@ ytlog() { adb logcat -d -s CarHomeYT:* | tail -40 > $OUT/yt-log-$1.txt; }
 playing() { adb logcat -d -s CarHomeYT:* | grep "playing=" | tail -1; }
 VID="https://m.youtube.com/watch?v=aqz-KE-bpKQ"
 # YouTube 在雲端機房會要求登入（擋機器人），播放測試改用一般影片檔
-MP4="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+# 在測試機器上自己架一個小網站：有畫面計時器＋聲音的影片
+mkdir -p www
+ffmpeg -loglevel error -f lavfi -i "testsrc=size=640x360:rate=25:duration=300" -f lavfi -i "sine=frequency=440:duration=300" -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -shortest www/v.mp4
+cat > www/t.html <<'HTML'
+<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>test</title></head>
+<body style="margin:0;background:#000"><video id="v" src="v.mp4" autoplay controls playsinline loop style="width:100%"></video>
+<div id="s" style="color:#fff;font:bold 28px sans-serif;padding:8px"></div>
+<script>setInterval(function(){var v=document.getElementById('v');document.getElementById('s').textContent=(v.paused?'PAUSED ':'PLAYING ')+v.currentTime.toFixed(1)+'s hidden='+document.hidden;},500);</script>
+</body></html>
+HTML
+(cd www && python3 -m http.server 8000 >/dev/null 2>&1 &)
+MP4="http://10.0.2.2:8000/t.html"
 floatFrame() { adb shell dumpsys window windows | grep -A25 "Window{[0-9a-f]* u0 com.archiekuo.carhome}:" | grep -o "mFrame=\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]" | head -1 | sed 's/mFrame=\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]/\1 \2 \3 \4/'; }
 # 小視窗上的按鈕：$1＝離右邊多遠
 floatBtn() { set -- $1 $(floatFrame); [ -n "$5" ] && tap $(( $4 - $1 )) $(( $3 + 28 )) && echo "floatBtn @ $(( $4 - $1 )),$(( $3 + 28 ))"; }
