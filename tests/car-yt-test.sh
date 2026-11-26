@@ -66,6 +66,11 @@ adb logcat -c
 ytlog() { adb logcat -d -s CarHomeYT:* | tail -40 > $OUT/yt-log-$1.txt; }
 playing() { adb logcat -d -s CarHomeYT:* | grep "playing=" | tail -1; }
 VID="https://m.youtube.com/watch?v=aqz-KE-bpKQ"
+# YouTube 在雲端機房會要求登入（擋機器人），播放測試改用一般影片檔
+MP4="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+floatFrame() { adb shell dumpsys window windows | grep -A25 "Window{[0-9a-f]* u0 com.archiekuo.carhome}:" | grep -o "mFrame=\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]" | head -1 | sed 's/mFrame=\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]/\1 \2 \3 \4/'; }
+# 小視窗上的按鈕：$1＝離右邊多遠
+floatBtn() { set -- $1 $(floatFrame); [ -n "$5" ] && tap $(( $4 - $1 )) $(( $3 + 28 )) && echo "floatBtn @ $(( $4 - $1 )),$(( $3 + 28 ))"; }
 
 home
 shot 01-桌面-神盾沒有自動開 25
@@ -75,8 +80,9 @@ scrollTap "網頁引擎（點一下切換）"
 sleep 1
 back; sleep 1
 tapText "設定"; sleep 3
-for i in 1 2; do adb shell input swipe 640 600 640 260 500; sleep 1; done
-shot 02-設定-YouTube與神盾 2
+shot 02a-設定-神盾 2
+adb shell input swipe 640 600 640 330 500; sleep 1
+shot 02b-設定-YouTube 2
 back; sleep 2
 # 剛剛點了一次切換（自動→車機內建），切回自動
 adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_engine auto
@@ -101,39 +107,74 @@ echo "full: $(playing)" | tee -a $OUT/state.txt
 tapText "縮小"
 sleep 3
 
+# ---- 播放測試：一般影片檔，看搬來搬去會不會停 ----
+adb logcat -c
+adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_url "$MP4"
+sleep 20
+if ! playing | grep -q "playing=true"; then adb shell input tap 1060 380; sleep 8; fi
+shot 06-小格-影片播放中 2
+echo "card mp4: $(playing)" | tee -a $OUT/state.txt
+tapText "放大"
+shot 07-全畫面-影片 6
+echo "full mp4: $(playing)" | tee -a $OUT/state.txt
+tapText "縮小"
+sleep 4
+echo "card again: $(playing)" | tee -a $OUT/state.txt
+
 # ---- 開別的 App：自動變浮動小視窗 ----
 adb shell am start -a android.settings.SETTINGS
-shot 06-開別的App-浮動小視窗 10
+shot 08-開別的App-浮動小視窗 8
 echo "float: $(playing)" | tee -a $OUT/state.txt
+echo "frame: $(floatFrame)" | tee -a $OUT/state.txt
 adb shell dumpsys window windows | grep -E "Window\{.*(carhome|Settings)" > $OUT/windows.txt
 # 拖曳把手移到左上
-adb shell input swipe 760 384 200 60 1200
-shot 07-浮動-拖到左上 4
-# 其他 App 搶聲音（網路收音機開始播）
+set -- $(floatFrame); adb shell input swipe $(( $1 + 60 )) $(( $2 + 28 )) 120 40 1200
+shot 09-浮動-拖到左上 4
+echo "frame after drag: $(floatFrame)" | tee -a $OUT/state.txt
+# 其他 App 搶聲音（網路收音機開始播一台）
 adb shell am start -n com.archiekuo.radio/.MainActivity
 sleep 10
-shot 08-浮動在收音機上 2
+tapText "熱門推薦"; sleep 6
+adb shell input tap 900 300; sleep 10
+shot 10-浮動在收音機上-收音機也在播 2
 adb shell dumpsys audio | grep -A8 "Audio Focus stack" > $OUT/audio-focus-float.txt
 echo "float over radio: $(playing)" | tee -a $OUT/state.txt
+# 按小視窗的「放大」
+floatBtn 140
+shot 11-小視窗按放大 6
+echo "after 放大: $(playing)" | tee -a $OUT/state.txt
+tapText "浮動"
+sleep 2
+adb shell am start -a android.settings.SETTINGS
+sleep 4
 # 按小視窗的「回桌面」
-tapText "回桌面"
-shot 09-回桌面-回到小格 6
-echo "back home: $(playing)" | tee -a $OUT/state.txt
+floatBtn 225
+shot 12-小視窗按回桌面 6
+echo "after 回桌面: $(playing)" | tee -a $OUT/state.txt
 ytlog float
 
-# ---- 車機首頁鍵 ＋ 下方 YouTube 方塊開全畫面 ----
+# ---- 下方 YouTube 方塊開全畫面 ＋ 車機首頁鍵 ----
 tapText "YouTube"
-shot 10-下方方塊-全畫面 6
+shot 13-下方方塊-全畫面 5
 home
-shot 11-按首頁鍵-縮回小格 4
+shot 14-按首頁鍵-縮回小格 4
+echo "after home key: $(playing)" | tee -a $OUT/state.txt
 tapText "關閉"
-shot 12-關閉-回到照片 3
+shot 15-關閉-回到照片 3
 
 # ---- 強制用車機內建 WebView 試試 ----
 adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_engine system
 sleep 2
 adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_url "$VID"
-shot 13-車機內建WebView 30
+shot 16-車機內建WebView 30
+adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_url "$MP4"
+sleep 15
+if ! playing | grep -q "playing=true"; then adb shell input tap 1060 380; sleep 8; fi
+echo "system mp4: $(playing)" | tee -a $OUT/state.txt
+adb shell am start -a android.settings.SETTINGS
+shot 17-車機內建-浮動 8
+echo "system float: $(playing)" | tee -a $OUT/state.txt
+home; sleep 3
 ytlog system
 adb shell am start -n com.archiekuo.carhome/.MainActivity --es test_yt_engine auto
 adb logcat -d -s CarHomeYT:* > $OUT/yt-log-all.txt
