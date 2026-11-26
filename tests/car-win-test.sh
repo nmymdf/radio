@@ -113,3 +113,4 @@ shot 09-設定-自動記住方法 2
 back
 adb logcat -d -s CarHomeYT:* > $OUT/yt-log.txt
 adb logcat -d -b crash > $OUT/crash-log.txt || true
+# rerun
