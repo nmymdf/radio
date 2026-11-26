@@ -244,15 +244,19 @@ class CarApp : Application() {
         scope.launch {
             delay(2500)
             if (homeStarted) {
+                winFails = 0
                 prefs.ytWinMethod.set(n)
                 say("找到了！YouTube 小窗用方法 $n，以後都用這個")
-            } else if (n < 3) {
-                say("方法 $n 不是小窗。回桌面再點一次 YouTube，會自動試方法 ${n + 1}")
             } else {
-                say("三種方法都不是小窗：請用車機自己的小窗按鈕")
+                winFails++
+                if (winFails >= 3) { winFails = 0; say("三種方法都不是小窗：請用車機自己的小窗按鈕") }
+                else say("方法 $n 不是小窗。回桌面再點一次 YouTube，會自動試方法 ${n % 3 + 1}")
             }
         }
     }
+
+    /** 這一輪連續失敗幾種 */
+    private var winFails = 0
 
     /** 桌面畫面有沒有還看得到（被全畫面 App 蓋住時是 false） */
     @Volatile var homeStarted = true
