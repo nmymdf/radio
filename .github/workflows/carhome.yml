@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          VER=$(grep versionName app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          VER=$(grep 'versionName =' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           mkdir -p ../out
           # 精簡版（車機用，小）
           gradle :app:assembleLiteRelease --no-daemon --stacktrace 2>&1 | tee ../build-log.txt
@@ -41,7 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VER=$(grep versionName app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          VER=$(grep 'versionName =' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           gh release delete carhome-latest -y --cleanup-tag || true
           gh release create carhome-latest ../out/*.apk --title "車機桌面" --notes "build ${GITHUB_SHA}" --target "${GITHUB_SHA}"
           mkdir ../branch && cd ../branch && git init -q && git checkout -q -b apk-car

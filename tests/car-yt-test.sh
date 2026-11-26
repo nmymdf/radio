@@ -196,3 +196,4 @@ adb logcat -d -b crash > $OUT/crash-log.txt || true
 adb logcat -d | grep -iE "gecko|chromium" | tail -80 > $OUT/engine-log.txt
 pkill -f "http.server 8000" || true
 # lite
+# lite all abi
