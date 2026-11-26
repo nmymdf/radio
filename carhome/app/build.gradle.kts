@@ -14,8 +14,6 @@ android {
         targetSdk = 34
         versionCode = 7
         versionName = "0.6.1"
-        // 車機是 ARM；雲端模擬器測試另外打包 x86_64（-Pabis=x86_64）
-        ndk { abiFilters += (project.findProperty("abis") as String? ?: "arm64-v8a,armeabi-v7a").split(",") }
     }
     signingConfigs {
         create("release") {
@@ -28,7 +26,11 @@ android {
     // full＝有自帶網頁引擎（大）；lite＝精簡版（小，用車機內建網頁元件）
     flavorDimensions += "engine"
     productFlavors {
-        create("full") { dimension = "engine" }
+        create("full") {
+            dimension = "engine"
+            // 自帶引擎很大：車機只放 ARM；雲端模擬器測試另外打包 x86_64（-Pabis=x86_64）
+            ndk { abiFilters += (project.findProperty("abis") as String? ?: "arm64-v8a,armeabi-v7a").split(",") }
+        }
         create("lite") { dimension = "engine"; versionNameSuffix = "-精簡" }
     }
     buildTypes {
