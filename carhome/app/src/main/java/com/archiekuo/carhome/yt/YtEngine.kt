@@ -173,6 +173,13 @@ class GeckoEngine(ctx: Context, private val l: YtListener) : YtEngine {
                 if (fullScreen) { session.exitFullScreen(); l.onFullscreen(true) }
             }
         }
+        // 允許影片自動播放（搬到浮動視窗後要能繼續播）
+        session.permissionDelegate = object : GeckoSession.PermissionDelegate {
+            override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission): GeckoResult<Int>? =
+                if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE || perm.permission == GeckoSession.PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE)
+                    GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
+                else null
+        }
         session.mediaSessionDelegate = object : MediaSession.Delegate {
             override fun onActivated(session: GeckoSession, mediaSession: MediaSession) { media = mediaSession }
             override fun onDeactivated(session: GeckoSession, mediaSession: MediaSession) { if (media === mediaSession) media = null; l.onPlaying(false) }

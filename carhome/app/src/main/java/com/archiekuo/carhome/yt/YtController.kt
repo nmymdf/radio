@@ -86,6 +86,7 @@ class YtController(private val app: CarApp) : YtListener {
             return
         }
         autoFloated = auto && m == Mode.FLOAT
+        Log.i(TAG, "mode ${_mode.value} -> $m auto=$auto")
         _mode.value = m
         place()
     }
@@ -149,7 +150,10 @@ class YtController(private val app: CarApp) : YtListener {
         }
     }
 
-    override fun onPlaying(playing: Boolean) { _playing.value = playing }
+    override fun onPlaying(playing: Boolean) {
+        if (_playing.value != playing) Log.i(TAG, "playing=$playing mode=${_mode.value}")
+        _playing.value = playing
+    }
 
     override fun onFullscreen(on: Boolean) {
         if (on && _mode.value != Mode.FULL) {
