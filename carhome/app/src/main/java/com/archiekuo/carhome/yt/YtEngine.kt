@@ -189,7 +189,7 @@ class GeckoEngine(ctx: Context, private val l: YtListener) : YtEngine {
         }
         gecko = GeckoView(ctx)
         // 用 TextureView 畫，搬到浮動視窗時比較不會黑掉
-        runCatching { gecko.setViewBackend(GeckoView.BACKEND_TEXTURE_VIEW) }
+        if (textureBackend) runCatching { gecko.setViewBackend(GeckoView.BACKEND_TEXTURE_VIEW) }
         gecko.setSession(session)
     }
 
@@ -204,6 +204,8 @@ class GeckoEngine(ctx: Context, private val l: YtListener) : YtEngine {
     }
 
     companion object {
+        /** 畫面方式：true＝TextureView、false＝SurfaceView */
+        var textureBackend = true
         private var rt: GeckoRuntime? = null
         fun runtime(ctx: Context): GeckoRuntime = rt ?: GeckoRuntime.create(
             ctx.applicationContext,
