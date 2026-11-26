@@ -22,7 +22,8 @@ jobs:
           if git ls-tree --name-only origin/apk-car | grep -q "\.apk$"; then
             git show origin/apk-car:$(git ls-tree --name-only origin/apk-car | grep "\.apk$" | head -1) > apks/carhome.apk
           else
-            gh release download carhome-latest -p "carhome-test-x86_64.apk" -O apks/carhome.apk
+            PAT=$(cat tests/CARAPK.txt 2>/dev/null || echo "carhome-test-x86_64.apk")
+            gh release download carhome-latest -p "$PAT" -O apks/carhome.apk
           fi
           ls -la apks; git ls-tree --name-only origin/apk-car
       - name: Enable KVM
