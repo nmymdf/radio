@@ -239,8 +239,23 @@ class CarApp : Application() {
         }.getOrElse { android.util.Log.w("CarHomeYT", "window $n failed", it); false }
         android.util.Log.i("CarHomeYT", "window method $n ok=$ok")
         if (!ok) { apps.launch(p); say("小窗方法 $n 失敗，改用全畫面"); return }
-        say(if (fixed in 1..3) "YouTube 小窗（方法 $n）" else "小窗方法 $n：${winMethodNames[n - 1]}　不是小窗就回桌面再按一次試方法 ${n % 3 + 1}")
+        if (fixed in 1..3) return
+        // 自動判斷：小窗打開時桌面還看得到（沒有被蓋掉）＝成功，記住這個方法
+        scope.launch {
+            delay(2500)
+            if (homeStarted) {
+                prefs.ytWinMethod.set(n)
+                say("找到了！YouTube 小窗用方法 $n，以後都用這個")
+            } else if (n < 3) {
+                say("方法 $n 不是小窗。回桌面再點一次 YouTube，會自動試方法 ${n + 1}")
+            } else {
+                say("三種方法都不是小窗：請用車機自己的小窗按鈕")
+            }
+        }
     }
+
+    /** 桌面畫面有沒有還看得到（被全畫面 App 蓋住時是 false） */
+    @Volatile var homeStarted = true
 
     /** 語音說的關鍵字交給 YouTube App 搜尋 */
     fun searchYouTube(q: String) {

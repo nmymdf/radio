@@ -164,6 +164,16 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) applyBars(app.prefs.hideStatus.value)
     }
 
+    override fun onStart() {
+        super.onStart()
+        app.homeStarted = true
+    }
+
+    override fun onStop() {
+        app.homeStarted = false
+        super.onStop()
+    }
+
     override fun onPause() {
         app.homeVisible = false
         super.onPause()
