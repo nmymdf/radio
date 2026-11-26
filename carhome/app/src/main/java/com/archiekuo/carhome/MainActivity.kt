@@ -148,7 +148,7 @@ class MainActivity : ComponentActivity() {
     /** 雲端模擬車機測試用：指定導航 App（模擬器上沒有高德） */
     private fun handleTestIntent(i: Intent?) {
         i?.getStringExtra("test_yt_engine")?.let { e -> app.prefs.ytEngine.set(e); app.yt.resetEngine() }
-        i?.getStringExtra("test_yt_url")?.let { u -> if (u.startsWith("https://")) app.yt.start(com.archiekuo.carhome.yt.YtController.Mode.CARD, u) }
+        i?.getStringExtra("test_yt_url")?.let { u -> if (u.startsWith("https://") || u.startsWith("http://10.0.2.2")) app.yt.start(com.archiekuo.carhome.yt.YtController.Mode.CARD, u) }
         i?.getStringExtra("test_nav_pkg")?.let { pkg -> if (pkg.matches(Regex("[A-Za-z0-9_.]+"))) app.prefs.tile(2).set(pkg) }
     }
 
