@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archiekuo.carhome.CarApp
 import com.archiekuo.carhome.data.SystemInfo
 import com.archiekuo.carhome.media.RadioRemote
+import com.archiekuo.carhome.yt.YtController.Mode as YtMode
 import kotlin.random.Random
 
 private sealed interface Overlay {
@@ -199,7 +200,6 @@ fun HomeScreen(
                             onVoice = { onVoice("請說目的地") { q -> app.navSearch(q) } },
                             onHome = { app.navHome(false) }, onWork = { app.navHome(true) },
                         )
-                        val Y = com.archiekuo.carhome.yt.YtController.Mode
                         YouTubeCard(
                             ytPhoto, ytMode, Modifier.fillMaxWidth().weight(1f),
                             register = { app.yt.cardHost = it },
@@ -207,8 +207,8 @@ fun HomeScreen(
                             onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
                             onChangePhoto = { overlay = Overlay.PickPhoto },
                             onHome = app.yt::home, onBack = app.yt::back,
-                            onFull = { app.yt.setMode(Y.FULL) }, onFloat = { app.yt.setMode(Y.FLOAT) },
-                            onClose = app.yt::close, onPullBack = { app.yt.setMode(Y.CARD) },
+                            onFull = { app.yt.setMode(YtMode.FULL) }, onFloat = { app.yt.setMode(YtMode.FLOAT) },
+                            onClose = app.yt::close, onPullBack = { app.yt.setMode(YtMode.CARD) },
                         )
                     }
                 }
@@ -233,12 +233,11 @@ fun HomeScreen(
         }
 
         if (ytMode == com.archiekuo.carhome.yt.YtController.Mode.FULL) {
-            val Y = com.archiekuo.carhome.yt.YtController.Mode
             YouTubeFull(
                 register = { app.yt.fullHost = it },
-                onSmall = { app.yt.setMode(Y.CARD) }, onBack = app.yt::back, onHome = app.yt::home,
+                onSmall = { app.yt.setMode(YtMode.CARD) }, onBack = app.yt::back, onHome = app.yt::home,
                 onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
-                onFloat = { app.yt.setMode(Y.FLOAT) }, onClose = app.yt::close,
+                onFloat = { app.yt.setMode(YtMode.FLOAT) }, onClose = app.yt::close,
             )
         }
 
