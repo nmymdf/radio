@@ -26,15 +26,8 @@ jobs:
           set -o pipefail
           VER=$(grep 'versionName =' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           mkdir -p ../out
-          # 精簡版（車機用，小）
-          gradle :app:assembleLiteRelease --no-daemon --stacktrace 2>&1 | tee ../build-log.txt
-          cp app/build/outputs/apk/lite/release/app-lite-release.apk "../out/carhome-v${VER}-lite.apk"
-          # 完整版（有自帶網頁引擎）只放 64 位元，檔案小一半
-          gradle :app:assembleFullRelease -Pabis=arm64-v8a --no-daemon 2>&1 | tail -5 | tee -a ../build-log.txt
-          cp app/build/outputs/apk/full/release/app-full-release.apk "../out/carhome-v${VER}-full64.apk"
-          # 雲端模擬器測試用（x86_64）
-          gradle :app:assembleFullRelease -Pabis=x86_64 --no-daemon 2>&1 | tail -5 | tee -a ../build-log.txt
-          cp app/build/outputs/apk/full/release/app-full-release.apk "../out/carhome-test-x86_64.apk"
+          gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee ../build-log.txt
+          cp app/build/outputs/apk/release/app-release.apk "../out/carhome-v${VER}.apk"
           ls -la ../out | tee -a ../build-log.txt
       - name: Publish APK to release and apk-car branch
         if: success()

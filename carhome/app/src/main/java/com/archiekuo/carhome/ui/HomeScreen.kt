@@ -27,7 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archiekuo.carhome.CarApp
 import com.archiekuo.carhome.data.SystemInfo
 import com.archiekuo.carhome.media.RadioRemote
-import com.archiekuo.carhome.yt.YtController.Mode as YtMode
 import kotlin.random.Random
 
 private sealed interface Overlay {
@@ -94,23 +93,14 @@ fun HomeScreen(
     var overlay by remember { mutableStateOf<Overlay>(Overlay.None) }
     val ytPhoto by p.ytPhoto.flow.collectAsStateWithLifecycle()
     val message by app.message.collectAsStateWithLifecycle()
-    val ytMode by app.yt.mode.collectAsStateWithLifecycle()
-    val ytEngineLabel by app.yt.engineLabel.collectAsStateWithLifecycle()
-    val ytAutoFloat by p.ytAutoFloat.flow.collectAsStateWithLifecycle()
-    val ytEngine by p.ytEngine.flow.collectAsStateWithLifecycle()
+    val ytWinMethod by p.ytWinMethod.flow.collectAsStateWithLifecycle()
     var resetTiles by remember { mutableStateOf(false) }
 
     // 按車機的「首頁」鍵：關掉所有面板、YouTube 縮回小畫面（繼續播）
-    LaunchedEffect(homeTick) {
-        if (homeTick > 0) {
-            overlay = Overlay.None
-            if (app.yt.mode.value == com.archiekuo.carhome.yt.YtController.Mode.FULL) app.yt.setMode(com.archiekuo.carhome.yt.YtController.Mode.CARD)
-        }
-    }
+    LaunchedEffect(homeTick) { if (homeTick > 0) overlay = Overlay.None }
     // 桌面本身不能被「返回」關掉
     BackHandler(enabled = true) {
         when {
-            overlay == Overlay.None && ytMode == com.archiekuo.carhome.yt.YtController.Mode.FULL -> app.yt.setMode(com.archiekuo.carhome.yt.YtController.Mode.CARD)
             overlay == Overlay.Background -> overlay = Overlay.Settings
             overlay is Overlay.PickShield -> overlay = (overlay as Overlay.PickShield).back
             overlay != Overlay.None -> overlay = Overlay.None
@@ -155,7 +145,6 @@ fun HomeScreen(
             Role.APPS -> overlay = Overlay.Drawer
             Role.OEM -> if (!app.apps.launchOtherHome()) runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Role.NAV -> overlay = Overlay.NavMenu
-            Role.YOUTUBE -> app.openYouTube(true)
             else -> {
                 val d = defaultPkg(r)
                 if (d != null) app.apps.launch(d) else overlay = Overlay.PickTile(i)
@@ -201,14 +190,11 @@ fun HomeScreen(
                             onHome = { app.navHome(false) }, onWork = { app.navHome(true) },
                         )
                         YouTubeCard(
-                            ytPhoto, ytMode, Modifier.fillMaxWidth().weight(1f),
-                            register = { app.yt.cardHost = it },
-                            onStart = { app.openYouTube(false) },
+                            ytPhoto, Modifier.fillMaxWidth().weight(1f),
+                            onOpen = app::openYouTube,
                             onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
                             onChangePhoto = { overlay = Overlay.PickPhoto },
-                            onHome = app.yt::home, onBack = app.yt::back,
-                            onFull = { app.yt.setMode(YtMode.FULL) }, onFloat = { app.yt.setMode(YtMode.FLOAT) },
-                            onClose = app.yt::close, onPullBack = { app.yt.setMode(YtMode.CARD) },
+                            onSmall = app::openYouTubeWindow,
                         )
                     }
                 }
@@ -230,15 +216,6 @@ fun HomeScreen(
                 if (shieldLeft) { navSide(); player(); clockSide() } else { clockSide(); player(); navSide() }
             }
             Dock(tiles, ::tap) { i -> overlay = Overlay.PickTile(i) }
-        }
-
-        if (ytMode == com.archiekuo.carhome.yt.YtController.Mode.FULL) {
-            YouTubeFull(
-                register = { app.yt.fullHost = it },
-                onSmall = { app.yt.setMode(YtMode.CARD) }, onBack = app.yt::back, onHome = app.yt::home,
-                onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
-                onFloat = { app.yt.setMode(YtMode.FLOAT) }, onClose = app.yt::close,
-            )
         }
 
         when (val o = overlay) {
@@ -265,16 +242,12 @@ fun HomeScreen(
                         autoFm, fmApp()?.label ?: (if (fmPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
                         ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
                         shieldLeft = shieldLeft, memText = mem?.text ?: "",
-                        ytAutoFloat = ytAutoFloat,
-                        ytEngine = when (ytEngine) { "system" -> "車機內建"; "gecko" -> "App 自帶"; else -> "自動" } +
-                            "（車機內建 WebView ${com.archiekuo.carhome.yt.webViewMajor(ctx).let { if (it == 0) "?" else it.toString() }} 版）" +
-                            (if (ytEngineLabel.isNotBlank()) " ・ 現在用：" + ytEngineLabel.substringBefore("（") else ""),
+                        ytWin = (if (ytWinMethod in 1..3) "固定用方法 $ytWinMethod（${app.winMethodNames[ytWinMethod - 1]}）" else "每按一次換下一種（找方法中）") + " ・ " + app.windowInfo(),
                     ),
-                    onYtAutoFloat = p.ytAutoFloat::set,
-                    onYtEngine = {
-                        val next = when (ytEngine) { "auto" -> "system"; "system" -> "gecko"; else -> "auto" }
-                        p.ytEngine.set(next); app.yt.resetEngine()
-                        app.say("YouTube 引擎：" + when (next) { "system" -> "車機內建"; "gecko" -> "App 自帶"; else -> "自動" })
+                    onYtWin = {
+                        val next = (ytWinMethod + 1) % 4
+                        p.ytWinMethod.set(next)
+                        app.say(if (next == 0) "YouTube 小窗：每按一次換下一種" else "YouTube 小窗：固定用方法 $next")
                     },
                     onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield(Overlay.Settings) },
                     onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,

@@ -22,9 +22,6 @@
     <!-- 記憶體與背景 App：列出最近用過的 App（使用者要在系統設定允許） -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
 
-    <!-- 自帶網頁引擎要求較新的 Android；舊車機執行時會自動改用內建元件 -->
-    <uses-sdk tools:overrideLibrary="org.mozilla.geckoview" />
-
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />

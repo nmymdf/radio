@@ -58,13 +58,10 @@ class Prefs(ctx: Context) {
     val mode = StrPref("mode", "radio")
     /** YouTube 平常顯示的照片：lake、cafe、taipei、zen、black，或 file:路徑 */
     val ytPhoto = StrPref("ytPhoto", "lake")
-    /** YouTube 網頁引擎：auto（自動）、system（車機內建）、gecko（App 自帶） */
-    val ytEngine = StrPref("ytEngine", "auto")
-    /** 離開桌面時 YouTube 自動變成浮動小視窗 */
-    val ytAutoFloat = BoolPref("ytAutoFloat", true)
-    /** 浮動小視窗的位置（-1＝預設右下角） */
-    val floatX = IntPref("floatX", -1)
-    val floatY = IntPref("floatY", -1)
+    /** YouTube 小窗開法：0＝每按一次換下一種（找方法用），1～3＝固定用第幾種 */
+    val ytWinMethod = IntPref("ytWinMethod", 0)
+    /** 輪流試的時候，下一次要用第幾種（1～3） */
+    val ytWinNext = IntPref("ytWinNext", 1)
     /** YouTube 上次的網址 */
     val ytUrl = StrPref("ytUrl", "https://m.youtube.com")
 
