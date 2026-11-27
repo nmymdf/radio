@@ -80,7 +80,7 @@ PY
 LAT=24.9676
 for i in $(seq 1 40); do
   LAT=$(python3 -c "print($LAT+0.000135)")
-  adb emu geo nmea "$(nmea $LAT 121.5419)" >/dev/null
+  adb emu geo fix 121.5419 $LAT >/dev/null
   sleep 1
 done
 shot 02-開了一段-行車資訊 2
@@ -133,3 +133,4 @@ scrollTap "導航區放左邊"; sleep 1
 back
 adb logcat -d -b crash > $OUT/crash-log.txt || true
 # rerun
+# rerun2
