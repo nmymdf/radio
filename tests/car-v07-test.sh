@@ -125,10 +125,11 @@ back; sleep 1
 # ---- 左右調換 ----
 adb shell am start -n com.archiekuo.carhome/.MainActivity
 tapText "設定"; sleep 3
-tapText "導航區放左邊"; sleep 1
+scrollTap "導航區放左邊"; sleep 1
 back; sleep 2
 shot 15-左右調換 2
 tapText "設定"; sleep 3
-tapText "導航區放左邊"; sleep 1
+scrollTap "導航區放左邊"; sleep 1
 back
 adb logcat -d -b crash > $OUT/crash-log.txt || true
+# rerun
