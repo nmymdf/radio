@@ -87,6 +87,9 @@ shot 02-開了一段-行車資訊 2
 
 # ---- 導航中（假裝高德送轉彎資訊）----
 navb() { adb shell am broadcast -a AUTONAVI_STANDARD_BROADCAST_SEND --ei KEY_TYPE 10001 --ei ICON 3 --ei SEG_REMAIN_DIS $1 --es NEXT_ROAD_NAME "中正路" --ei ROUTE_REMAIN_DIS 12400 --ei ROUTE_REMAIN_TIME 1800 >/dev/null; }
+# 高德只是開著（巡航）：沒有剩餘距離 → 不能變成導航卡
+adb shell am broadcast -a AUTONAVI_STANDARD_BROADCAST_SEND --ei KEY_TYPE 10001 --ei ICON 0 --ei SEG_REMAIN_DIS 0 --ei ROUTE_REMAIN_DIS 0 --es CUR_ROAD_NAME "北新路" --ei LIMITED_SPEED 50 --ei CAMERA_DIST 320 >/dev/null
+shot 03a-高德巡航-維持行車資訊 3
 navb 300
 shot 03-導航中-大字導航 3
 navb 80
@@ -121,6 +124,9 @@ shot 13-通知消失-神盾關 4
 # ---- 設定 ----
 tapText "設定"; sleep 3
 shot 14-設定 2
+scrollTap "高德資料記錄"
+shot 14b-高德資料記錄 3
+back; sleep 1
 back; sleep 1
 # ---- 左右調換 ----
 adb shell am start -n com.archiekuo.carhome/.MainActivity
@@ -134,3 +140,4 @@ back
 adb logcat -d -b crash > $OUT/crash-log.txt || true
 # rerun
 # rerun2
+# v0.7.1
