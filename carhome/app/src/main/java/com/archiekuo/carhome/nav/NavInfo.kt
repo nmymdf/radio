@@ -65,9 +65,43 @@ fun remainText(g: NavGuide, twoLines: Boolean = false): String {
  * 接收高德車機版的導航廣播（AUTONAVI_STANDARD_BROADCAST_SEND）。
  * KEY_TYPE 10001＝導航資訊，10019＝狀態（結束導航時清掉）。
  */
-class NavInfo(ctx: Context, private val scope: CoroutineScope) {
+class NavInfo(private val ctx: Context, private val scope: CoroutineScope) {
     private val _guide = MutableStateFlow<NavGuide?>(null)
     val guide: StateFlow<NavGuide?> = _guide.asStateFlow()
+
+    // ---- 高德資料記錄：每一種 KEY_TYPE 留最後一筆，存到檔案（熄火重開也看得到） ----
+    data class LogItem(val type: Int, val count: Int, val time: Long, val text: String)
+    private val _log = MutableStateFlow<Map<Int, LogItem>>(emptyMap())
+    val log: StateFlow<Map<Int, LogItem>> = _log.asStateFlow()
+    private val logFile get() = java.io.File(ctx.filesDir, "amap-log.txt")
+    private var logDirty = false
+
+    private fun record(type: Int, b: Bundle) {
+        val text = b.keySet().sorted().joinToString("\n") { k -> "$k = ${runCatching { b.get(k) }.getOrNull()}" }
+        val old = _log.value[type]
+        _log.value = _log.value + (type to LogItem(type, (old?.count ?: 0) + 1, System.currentTimeMillis(), text))
+        logDirty = true
+    }
+
+    private fun saveLog() {
+        runCatching {
+            val o = org.json.JSONArray()
+            _log.value.values.forEach { o.put(org.json.JSONObject().put("type", it.type).put("count", it.count).put("time", it.time).put("text", it.text)) }
+            logFile.writeText(o.toString())
+        }
+    }
+
+    private fun loadLog() {
+        runCatching {
+            val a = org.json.JSONArray(logFile.readText())
+            _log.value = (0 until a.length()).associate { i ->
+                val o = a.getJSONObject(i)
+                o.getInt("type") to LogItem(o.getInt("type"), o.getInt("count"), o.getLong("time"), o.getString("text"))
+            }
+        }
+    }
+
+    fun clearLog() { _log.value = emptyMap(); runCatching { logFile.delete() } }
 
     private fun Bundle.int(vararg keys: String): Int? {
         for (k in keys) {
@@ -86,14 +120,20 @@ class NavInfo(ctx: Context, private val scope: CoroutineScope) {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
             val b = i.extras ?: return
-            when (b.int("KEY_TYPE")) {
-                10001 -> _guide.value = NavGuide(
-                    icon = b.int("ICON", "NEW_ICON") ?: 0,
-                    segDist = b.int("SEG_REMAIN_DIS") ?: -1,
-                    nextRoad = b.text("NEXT_ROAD_NAME"),
-                    remainDist = b.int("ROUTE_REMAIN_DIS") ?: -1,
-                    remainSec = b.int("ROUTE_REMAIN_TIME") ?: 0,
-                )
+            val type = b.int("KEY_TYPE") ?: -1
+            record(type, b)
+            when (type) {
+                10001 -> {
+                    val g = NavGuide(
+                        icon = b.int("ICON", "NEW_ICON") ?: 0,
+                        segDist = b.int("SEG_REMAIN_DIS") ?: -1,
+                        nextRoad = b.text("NEXT_ROAD_NAME"),
+                        remainDist = b.int("ROUTE_REMAIN_DIS") ?: -1,
+                        remainSec = b.int("ROUTE_REMAIN_TIME") ?: 0,
+                    )
+                    // 高德只是開著（巡航、沒有目的地）也會送資料：沒有剩餘距離就不算在導航
+                    _guide.value = if (g.remainDist > 0) g else null
+                }
                 10019 -> when (b.int("EXTRA_STATE")) {
                     2, 9, 12, 39 -> _guide.value = null // 高德關閉、結束導航、結束模擬導航、到達目的地
                 }
@@ -102,6 +142,8 @@ class NavInfo(ctx: Context, private val scope: CoroutineScope) {
     }
 
     init {
+        loadLog()
+        scope.launch { while (true) { delay(10_000); if (logDirty) { logDirty = false; saveLog() } } }
         ContextCompat.registerReceiver(ctx, receiver, IntentFilter("AUTONAVI_STANDARD_BROADCAST_SEND"), ContextCompat.RECEIVER_EXPORTED)
         // 20 秒沒有新資訊就當作已經不在導航
         scope.launch {

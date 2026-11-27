@@ -45,6 +45,7 @@ private sealed interface Overlay {
     data object YtChoice : Overlay
     data object ShieldChoice : Overlay
     data object NotifyGuide : Overlay
+    data object AmapLog : Overlay
 }
 
 /** 版面位置（照 1280×720 設計） */
@@ -99,6 +100,7 @@ fun HomeScreen(
     val ytWinMethod by p.ytWinMethod.flow.collectAsStateWithLifecycle()
     val shieldOn by app.shieldOn.collectAsStateWithLifecycle()
     val trip by app.trip.trip.collectAsStateWithLifecycle()
+    val amapLog by app.nav.log.collectAsStateWithLifecycle()
     var notifyAsked by remember { mutableStateOf(false) }
     // 每分鐘重畫一次行車資訊（時間會走）
     val tripTick = now / 60_000
@@ -109,7 +111,7 @@ fun HomeScreen(
     // 桌面本身不能被「返回」關掉
     BackHandler(enabled = true) {
         when {
-            overlay == Overlay.Background -> overlay = Overlay.Settings
+            overlay == Overlay.Background || overlay == Overlay.AmapLog -> overlay = Overlay.Settings
             overlay is Overlay.PickShield -> overlay = (overlay as Overlay.PickShield).back
             overlay != Overlay.None -> overlay = Overlay.None
         }
@@ -257,9 +259,11 @@ fun HomeScreen(
                         ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
                         shieldLeft = shieldLeft, memText = mem?.text ?: "",
                         notifyOk = app.notifyAccess(),
+                        amapLog = if (amapLog.isEmpty()) "還沒有資料" else "收到 ${amapLog.values.sumOf { it.count }} 筆，點這裡看",
                         shieldButtons = com.archiekuo.carhome.shield.ShieldWatcher.instance?.actionTitles() ?: "",
                     ),
                     onNotify = { openNotifySettings(ctx) },
+                    onAmapLog = { overlay = Overlay.AmapLog },
                     onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield(Overlay.Settings) },
                     onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,
                     onViz = { v -> p.viz.set(v); if (v) app.viz.start() else app.viz.stop() }, onVizTempo = p.vizTempo::set,
@@ -318,6 +322,7 @@ fun HomeScreen(
                 ),
                 note = "按「去開啟」後，在清單裡找「車機桌面」，把開關打開，\n再按返回鍵回來。只要設定一次。",
             ) { overlay = Overlay.None }
+            Overlay.AmapLog -> AmapLogPage(amapLog.values.sortedBy { it.type }, onClear = app.nav::clearLog) { overlay = Overlay.Settings }
             Overlay.None -> {}
         }
         MessageBanner(message, Modifier.align(Alignment.TopCenter).padding(top = 70.dp))

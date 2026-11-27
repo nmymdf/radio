@@ -129,3 +129,29 @@ fun ChoiceBox(title: String, choices: List<Choice>, dot: Color? = null, note: St
         }
     }
 }
+
+/** 高德資料記錄：看高德送了哪些資料（巡航時有沒有限速、測速照相） */
+@Composable
+fun AmapLogPage(items: List<com.archiekuo.carhome.nav.NavInfo.LogItem>, onClear: () -> Unit, onBack: () -> Unit) {
+    PanelFrame("高德資料記錄", onBack, right = {
+        GhostButton("清除", Modifier.width(120.dp), onClick = onClear)
+    }) {
+        if (items.isEmpty()) {
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Text("還沒有收到高德的資料", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("開著高德開一段路（有導航、沒導航都可以），再回來看這一頁", fontSize = 22.sp, color = C.Sub, modifier = Modifier.padding(top = 12.dp))
+            }
+            return@PanelFrame
+        }
+        val fmt = remember { java.text.SimpleDateFormat("M/d HH:mm:ss", Locale.TAIWAN) }
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxSize().padding(horizontal = 40.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(items.size) { i ->
+                val it = items[i]
+                Column(Modifier.fillMaxWidth().card(RoundedCornerShape(18.dp)).padding(18.dp)) {
+                    Text("類型 ${it.type} ・ 收到 ${it.count} 次 ・ 最後 ${fmt.format(java.util.Date(it.time))}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = C.Gold)
+                    Text(it.text, fontSize = 19.sp, color = Color.White, lineHeight = 26.sp, modifier = Modifier.padding(top = 8.dp))
+                }
+            }
+        }
+    }
+}

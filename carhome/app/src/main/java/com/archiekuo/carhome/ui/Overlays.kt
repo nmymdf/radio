@@ -106,6 +106,7 @@ data class SettingsModel(
     val ytWin: String = "",
     val notifyOk: Boolean = false,
     val shieldButtons: String = "",
+    val amapLog: String = "",
 )
 
 @Composable
@@ -117,6 +118,7 @@ fun SettingsPanel(
     onShieldLeft: (Boolean) -> Unit = {}, onMemory: () -> Unit = {},
     onYtWin: () -> Unit = {},
     onNotify: () -> Unit = {},
+    onAmapLog: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     PanelFrame("車機桌面設定", onBack) {
@@ -139,6 +141,7 @@ fun SettingsPanel(
             }
             Group("系統") {
                 ActionRow("記憶體與背景 App", m.memText.ifBlank { "查看" }, onMemory)
+                ActionRow("高德資料記錄", m.amapLog, onAmapLog)
             }
             Group("權限與桌面") {
                 ActionRow("允許顯示在其他 App 上層", if (m.overlayOk) "已允許" else "尚未允許（神盾懸浮視窗需要）", onOverlay)
