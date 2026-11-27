@@ -14,7 +14,7 @@ data class Trip(val startAt: Long, val meters: Double) {
     val minutes: Long get() = (SystemClock.elapsedRealtime() - startAt) / 60_000
     val km: Double get() = meters / 1000.0
     /** 平均時速（含停車等紅燈） */
-    val avgKmh: Int get() { val h = (SystemClock.elapsedRealtime() - startAt) / 3_600_000.0; return if (h < 0.02) 0 else (km / h).roundToInt() }
+    val avgKmh: Int get() { val h = (SystemClock.elapsedRealtime() - startAt) / 3_600_000.0; return if (h <= 0.0) 0 else (km / h).roundToInt() }
 }
 
 /**

@@ -72,7 +72,7 @@ fun TripCard(t: Trip, modifier: Modifier) {
         HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
         TripRow("里程", String.format(Locale.US, "%.1f", t.km), "公里")
         HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
-        TripRow("平均", if (t.km < 0.1) "--" else "${t.avgKmh}", "km/h")
+        TripRow("平均", if (t.km < 0.1 || t.minutes < 1) "--" else "${t.avgKmh}", "km/h")
     }
 }
 
