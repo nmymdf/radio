@@ -26,6 +26,7 @@ class TripTracker(scope: CoroutineScope, fix: StateFlow<Fix?>) {
     val trip: StateFlow<Trip> = _trip.asStateFlow()
     private var last: Fix? = null
     private var lastAt = 0L
+    private var lastFixAt = 0L
 
     fun reset() { _trip.value = Trip(SystemClock.elapsedRealtime(), 0.0); last = null }
 
@@ -37,11 +38,16 @@ class TripTracker(scope: CoroutineScope, fix: StateFlow<Fix?>) {
                 if (lastAt != 0L && now - lastAt > 10 * 60_000) reset()
                 lastAt = now
                 val p = last
+                val pAt = lastFixAt
                 last = f
+                lastFixAt = now
                 if (p == null) return@collect
                 val d = meters(p.lat, p.lon, f.lat, f.lon)
-                // 停著不動時 GPS 會飄，車速太低或跳太遠都不算
-                if (f.speedKmh >= 3f && d < 500) _trip.value = _trip.value.copy(meters = _trip.value.meters + d)
+                // GPS 沒給車速時，用「移動距離 ÷ 時間」自己算
+                val sec = ((now - pAt) / 1000.0).coerceAtLeast(0.5)
+                val kmh = if (f.speedKmh > 0f) f.speedKmh.toDouble() else d / sec * 3.6
+                // 停著不動時 GPS 會飄：太慢（< 6 km/h）或一下跳太遠（> 500 公尺）都不算
+                if (kmh >= 6.0 && d < 500) _trip.value = _trip.value.copy(meters = _trip.value.meters + d)
             }
         }
     }
