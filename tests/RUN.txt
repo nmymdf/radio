@@ -1,1 +1,1 @@
-car-v07-test.sh
+emulator-test.sh
