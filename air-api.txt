@@ -1,0 +1,1 @@
+{"latitude":25.0,"longitude":121.5,"generationtime_ms":0.4786252975463867,"utc_offset_seconds":28800,"timezone":"Asia/Taipei","timezone_abbreviation":"GMT+8","elevation":24.0,"current_units":{"time":"iso8601","interval":"seconds","us_aqi":"USAQI","pm2_5":"μg/m³"},"current":{"time":"2026-11-27T11:00","interval":3600,"us_aqi":78,"pm2_5":18.3}}
