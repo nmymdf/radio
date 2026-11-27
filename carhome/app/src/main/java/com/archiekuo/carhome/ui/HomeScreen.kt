@@ -6,7 +6,7 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -42,6 +42,9 @@ private sealed interface Overlay {
     data object Weather : Overlay
     data object Music : Overlay
     data object Background : Overlay
+    data object YtChoice : Overlay
+    data object ShieldChoice : Overlay
+    data object NotifyGuide : Overlay
 }
 
 /** 版面位置（照 1280×720 設計） */
@@ -94,6 +97,11 @@ fun HomeScreen(
     val ytPhoto by p.ytPhoto.flow.collectAsStateWithLifecycle()
     val message by app.message.collectAsStateWithLifecycle()
     val ytWinMethod by p.ytWinMethod.flow.collectAsStateWithLifecycle()
+    val shieldOn by app.shieldOn.collectAsStateWithLifecycle()
+    val trip by app.trip.trip.collectAsStateWithLifecycle()
+    var notifyAsked by remember { mutableStateOf(false) }
+    // 每分鐘重畫一次行車資訊（時間會走）
+    val tripTick = now / 60_000
     var resetTiles by remember { mutableStateOf(false) }
 
     // 按車機的「首頁」鍵：關掉所有面板、YouTube 縮回小畫面（繼續播）
@@ -132,6 +140,11 @@ fun HomeScreen(
         when {
             custom != null && r == Role.NAV -> TileUi(r, custom.label, null)
             custom != null -> TileUi(r, custom.label, app.apps.icon(custom.pkg))
+            r == Role.SHIELD -> when (shieldOn) {
+                true -> TileUi(r, "神盾 開", null, true)
+                false -> TileUi(r, "神盾 關", null, false)
+                null -> TileUi(r, r.label, null)
+            }
             else -> TileUi(r, r.label, null)
         }
     }
@@ -145,6 +158,13 @@ fun HomeScreen(
             Role.APPS -> overlay = Overlay.Drawer
             Role.OEM -> if (!app.apps.launchOtherHome()) runCatching { ctx.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             Role.NAV -> overlay = Overlay.NavMenu
+            Role.YOUTUBE -> overlay = Overlay.YtChoice
+            Role.SHIELD -> when {
+                app.shieldPackage() == null -> { app.say("找不到神盾 App，請選擇"); overlay = Overlay.PickShield(Overlay.None) }
+                shieldOn == true -> overlay = Overlay.ShieldChoice
+                !app.notifyAccess() && !notifyAsked -> overlay = Overlay.NotifyGuide
+                else -> app.openShieldBackground()
+            }
             else -> {
                 val d = defaultPkg(r)
                 if (d != null) app.apps.launch(d) else overlay = Overlay.PickTile(i)
@@ -167,8 +187,6 @@ fun HomeScreen(
             }
         },
     ) {
-        if (vizOn) VisualizerLayer(app.viz, active, vizTempo, Modifier.fillMaxWidth().height(260.dp).align(Alignment.BottomCenter))
-
         Column(Modifier.fillMaxSize().padding(start = Layout.PAD_X.dp, end = Layout.PAD_X.dp, top = 16.dp, bottom = 46.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             TopBar(now, online, road, roadStale, fix?.speedKmh, navLabel = if (guide != null) navLabel else null, onNav = ::openNav)
             Row(Modifier.fillMaxWidth().height(Layout.MID_H.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -179,23 +197,19 @@ fun HomeScreen(
                         WeatherCard(weather, district ?: (if (fix == null) "新店" else null), online, onClick = { overlay = Overlay.Weather })
                     }
                 }
-                // 導航區（導航中＝導航小卡；沒在導航＝三個大按鈕）＋ YouTube
+                // 導航區：導航中＝大字導航卡；平時＝三個大按鈕＋這一趟行車資訊
                 val navSide: @Composable () -> Unit = {
                     Column(Modifier.width(Layout.SIDE_W.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         val g = guide
-                        if (g != null) NavCard(g, Modifier.fillMaxWidth().height(Layout.NAV_H.dp), onClick = ::openNav)
-                        else NavQuick(
-                            Modifier.fillMaxWidth().height(Layout.NAV_H.dp),
-                            onVoice = { onVoice("請說目的地") { q -> app.navSearch(q) } },
-                            onHome = { app.navHome(false) }, onWork = { app.navHome(true) },
-                        )
-                        YouTubeCard(
-                            ytPhoto, Modifier.fillMaxWidth().weight(1f),
-                            onOpen = app::openYouTube,
-                            onVoice = { onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
-                            onChangePhoto = { overlay = Overlay.PickPhoto },
-                            onSmall = app::openYouTubeWindow,
-                        )
+                        if (g != null) NavBig(g, Modifier.fillMaxSize(), onClick = ::openNav)
+                        else {
+                            NavQuick(
+                                Modifier.fillMaxWidth().height(Layout.NAV_H.dp),
+                                onVoice = { onVoice("請說目的地") { q -> app.navSearch(q) } },
+                                onHome = { app.navHome(false) }, onWork = { app.navHome(true) },
+                            )
+                            key(tripTick) { TripCard(trip, Modifier.fillMaxWidth().weight(1f)) }
+                        }
                     }
                 }
                 val player: @Composable () -> Unit = {
@@ -242,13 +256,10 @@ fun HomeScreen(
                         autoFm, fmApp()?.label ?: (if (fmPkg.isBlank()) "自動尋找（找不到請點這裡選）" else "未安裝"),
                         ytRestrict, vizOn, vizTempo, hideStatus, overlayOk(), app.viz.hasRealAudio, black,
                         shieldLeft = shieldLeft, memText = mem?.text ?: "",
-                        ytWin = (if (ytWinMethod in 1..3) "固定用方法 $ytWinMethod（${app.winMethodNames[ytWinMethod - 1]}）" else "每按一次換下一種（找方法中）") + " ・ " + app.windowInfo(),
+                        notifyOk = app.notifyAccess(),
+                        shieldButtons = com.archiekuo.carhome.shield.ShieldWatcher.instance?.actionTitles() ?: "",
                     ),
-                    onYtWin = {
-                        val next = (ytWinMethod + 1) % 4
-                        p.ytWinMethod.set(next)
-                        app.say(if (next == 0) "YouTube 小窗：每按一次換下一種" else "YouTube 小窗：固定用方法 $next")
-                    },
+                    onNotify = { openNotifySettings(ctx) },
                     onAutoRadio = p.autoRadio::set, onAutoShield = p.autoShield::set, onPickShield = { overlay = Overlay.PickShield(Overlay.Settings) },
                     onAutoFm = p.autoFm::set, onPickFm = { overlay = Overlay.PickFm }, onYt = p.ytRestrict::set,
                     onViz = { v -> p.viz.set(v); if (v) app.viz.start() else app.viz.stop() }, onVizTempo = p.vizTempo::set,
@@ -284,6 +295,29 @@ fun HomeScreen(
                 onPlay = { id -> app.playLocalSong(id) }, onShuffle = app.local::toggleShuffle, onRescan = { app.local.rescan() },
             ) { overlay = Overlay.None }
             Overlay.Background -> BackgroundPage(app.apps, setOfNotNull(app.shieldPackage(), app.navPackage(), app.fmPackage(), RadioRemote.PKG)) { overlay = Overlay.Settings }
+            Overlay.YtChoice -> ChoiceBox(
+                "YouTube",
+                listOf(
+                    Choice("打開 YouTube", Icons.Rounded.SmartDisplay, 1) { overlay = Overlay.None; app.openYouTube() },
+                    Choice("用說的找影片", Icons.Rounded.Mic) { overlay = Overlay.None; onVoice("說出想看的影片") { q -> app.searchYouTube(q) } },
+                ),
+            ) { overlay = Overlay.None }
+            Overlay.ShieldChoice -> ChoiceBox(
+                "神盾 正在背景執行",
+                listOf(
+                    Choice("打開畫面", Icons.Rounded.Shield, 1) { overlay = Overlay.None; app.shieldPackage()?.let { app.apps.launch(it) } },
+                    Choice("關閉神盾", Icons.Rounded.Close, 2) { overlay = Overlay.None; app.closeShield() },
+                ),
+                dot = C.GreenText,
+            ) { overlay = Overlay.None }
+            Overlay.NotifyGuide -> ChoiceBox(
+                "看得到神盾開或關",
+                listOf(
+                    Choice("去開啟", Icons.Rounded.Notifications, 1) { overlay = Overlay.None; notifyAsked = true; openNotifySettings(ctx) },
+                    Choice("先打開神盾", Icons.Rounded.Shield) { overlay = Overlay.None; notifyAsked = true; app.openShieldBackground() },
+                ),
+                note = "按「去開啟」後，在清單裡找「車機桌面」，把開關打開，\n再按返回鍵回來。只要設定一次。",
+            ) { overlay = Overlay.None }
             Overlay.None -> {}
         }
         MessageBanner(message, Modifier.align(Alignment.TopCenter).padding(top = 70.dp))
@@ -291,4 +325,14 @@ fun HomeScreen(
         if (resetTiles) ConfirmBox("恢復預設", "確定把下方七個方塊全部恢復成預設嗎？", "恢復",
             onOk = { (0 until 7).forEach { p.tile(it).set("") }; resetTiles = false }, onCancel = { resetTiles = false })
     }
+}
+
+
+/** 打開車機的「通知存取權」設定頁 */
+fun openNotifySettings(ctx: android.content.Context) {
+    val tries = listOf(
+        Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"),
+        Intent(Settings.ACTION_SETTINGS),
+    )
+    for (i in tries) if (runCatching { ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return
 }

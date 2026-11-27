@@ -44,23 +44,23 @@ fun rememberNow(): Long {
 fun TopBar(now: Long, online: Boolean, road: String?, roadStale: Boolean, speed: Float?, navLabel: String? = null, onNav: () -> Unit = {}) {
     val date = remember(now / 60000) { SimpleDateFormat("M 月 d 日 EEEE", Locale.TAIWAN).format(Date(now)) }
     Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(date, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
+        Text(date, fontSize = 27.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(if (online) Icons.Rounded.Wifi else Icons.Rounded.WifiOff, null, tint = if (online) C.GreenText else C.Red, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(6.dp))
-            Text(if (online) "網路已連線" else "沒有網路", fontSize = 19.sp, color = if (online) C.GreenText else C.Red, maxLines = 1)
+            Text(if (online) "網路已連線" else "沒有網路", fontSize = 22.sp, color = if (online) C.GreenText else C.Red, maxLines = 1)
         }
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Icon(Icons.Rounded.Place, null, tint = C.Gold, modifier = Modifier.size(26.dp))
             Spacer(Modifier.width(8.dp))
             Text(
                 (road ?: "正在找目前的路名…") + if (roadStale) "（未更新）" else "",
-                fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                fontSize = 29.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
             Spacer(Modifier.width(14.dp))
             Box(Modifier.clip(RoundedCornerShape(18.dp)).background(GoldBrush).padding(horizontal = 14.dp, vertical = 3.dp)) {
-                Text(if (speed != null) "${speed.toInt()} km/h" else "-- km/h", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = C.Ink, maxLines = 1)
+                Text(if (speed != null) "${speed.toInt()} km/h" else "-- km/h", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = C.Ink, maxLines = 1)
             }
         }
         if (navLabel != null) {
@@ -148,8 +148,8 @@ fun ClockCompass(now: Long, heading: Float?, mode: Int = 0, diameter: Int = 300,
                     Text(deg, fontSize = (30 * k).sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, modifier = Modifier.padding(top = (6 * k).dp))
                 }
                 else -> {
-                    Text(time, fontSize = (72 * k).sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = (72 * k).sp, maxLines = 1)
-                    Text(headingText(heading), fontSize = (21 * k).sp, fontWeight = FontWeight.Bold, color = C.Gold, maxLines = 1, modifier = Modifier.padding(top = (6 * k).dp))
+                    Text(time, fontSize = (80 * k).sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = (80 * k).sp, maxLines = 1)
+                    Text(headingText(heading), fontSize = (25 * k).sp, fontWeight = FontWeight.Bold, color = C.Gold, maxLines = 1, modifier = Modifier.padding(top = (6 * k).dp))
                 }
             }
         }
@@ -171,19 +171,18 @@ fun WeatherCard(w: Weather?, place: String?, online: Boolean, width: Int = 360, 
     ) {
         if (w == null) {
             Icon(Icons.Rounded.Cloud, null, tint = C.Sub, modifier = Modifier.size(64.dp))
-            Text(if (online) "天氣載入中…" else "沒有網路，暫時看不到天氣", fontSize = 21.sp, color = C.Sub)
+            Text(if (online) "天氣載入中…" else "沒有網路，暫時看不到天氣", fontSize = 24.sp, color = C.Sub)
             return@Row
         }
         val (icon, tint) = weatherIcon(w.kind)
         Icon(icon, w.text, tint = tint, modifier = Modifier.size(72.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("${w.temp}°", fontSize = 52.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 52.sp)
-                Spacer(Modifier.width(10.dp))
-                Text(w.text, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(bottom = 6.dp))
+                Text("${w.temp}°", fontSize = 62.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 62.sp)
+                Spacer(Modifier.width(12.dp))
+                Text(w.text, fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, modifier = Modifier.padding(bottom = 8.dp))
             }
-            Text(listOfNotNull(place, w.rain?.let { "降雨 $it%" }).joinToString(" ・ "), fontSize = 19.sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
-            if (w.max != null && w.min != null) Text("最高 ${w.max}° ・ 最低 ${w.min}°", fontSize = 17.sp, color = C.Sub, modifier = Modifier.padding(top = 2.dp))
+            w.rain?.let { Text("降雨 $it%", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = C.Sub, maxLines = 1, modifier = Modifier.padding(top = 6.dp)) }
         }
     }
 }

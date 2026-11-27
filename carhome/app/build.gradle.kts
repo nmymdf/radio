@@ -12,8 +12,8 @@ android {
         applicationId = "com.archiekuo.carhome"
         minSdk = 21
         targetSdk = 34
-        versionCode = 8
-        versionName = "0.6.2"
+        versionCode = 9
+        versionName = "0.7"
     }
     signingConfigs {
         create("release") {

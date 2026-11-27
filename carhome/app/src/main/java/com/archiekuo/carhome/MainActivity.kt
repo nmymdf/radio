@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         // 第一次（權限問完後）才執行發動後的動作，避免神盾蓋住權限詢問
         if (!firstDone) { firstDone = true; app.onFirstLaunch() }
         if (granted(Manifest.permission.ACCESS_FINE_LOCATION) || granted(Manifest.permission.ACCESS_COARSE_LOCATION)) app.location.start()
-        if (granted(Manifest.permission.RECORD_AUDIO) && app.prefs.viz.value) app.viz.start()
+        // v0.7：下方彩虹音樂條已拿掉（省效能）
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

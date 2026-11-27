@@ -35,6 +35,9 @@ class CarApp : Application() {
     lateinit var local: LocalMusicRemote
     lateinit var nav: NavInfo
     val viz = VisualizerEngine()
+    /** 神盾開著嗎：true＝開、false＝關、null＝不知道（還沒允許讀取通知） */
+    val shieldOn = kotlinx.coroutines.flow.MutableStateFlow<Boolean?>(null)
+    lateinit var trip: com.archiekuo.carhome.nav.TripTracker
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     /** 畫面上方的大字提示（3 秒後消失） */
@@ -67,6 +70,7 @@ class CarApp : Application() {
         radio = RadioRemote(this)
         local = LocalMusicRemote(this, prefs)
         nav = NavInfo(this, scope)
+        trip = com.archiekuo.carhome.nav.TripTracker(scope, location.fix)
         com.archiekuo.carhome.ui.Look.black = prefs.black.value
         scope.launch { prefs.black.flow.collect { com.archiekuo.carhome.ui.Look.black = it } }
         scope.launch { apps.refresh() }
@@ -93,16 +97,14 @@ class CarApp : Application() {
     fun onIgnition() {
         passengerMode.value = false
         ignitionAt = SystemClock.elapsedRealtime()
+        if (::trip.isInitialized) trip.reset()
         scope.launch {
             apps.refresh()
             if (prefs.autoShield.value) {
                 val shield = shieldPackage()
                 if (shield != null) {
                     delay(1500)
-                    apps.launch(shield)
-                    // 神盾打開後回到桌面，讓神盾變成懸浮視窗
-                    delay(5000)
-                    bringHome()
+                    openShieldBackground()
                 }
             }
             if (prefs.autoRadio.value && prefs.mode.value == "radio") {
@@ -113,6 +115,35 @@ class CarApp : Application() {
                 local.play()
             }
         }
+    }
+
+    // ---- 神盾：在背景打開、關閉、狀態 ----
+    /** 有沒有允許車機桌面讀取通知 */
+    fun notifyAccess(): Boolean = androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)
+
+    /** 打開神盾，然後馬上回到桌面，讓神盾在背景執行 */
+    fun openShieldBackground() {
+        val s = shieldPackage() ?: return
+        apps.launch(s)
+        scope.launch {
+            delay(3500)
+            bringHome()
+            delay(800)
+            say("神盾已在背景執行")
+            com.archiekuo.carhome.shield.ShieldWatcher.instance?.refresh()
+        }
+    }
+
+    /** 關閉神盾：按它通知上的「結束」；沒有這種按鈕就打開神盾讓你自己關 */
+    fun closeShield() {
+        val w = com.archiekuo.carhome.shield.ShieldWatcher.instance
+        if (w != null && w.pressExit()) {
+            say("已關閉神盾")
+            scope.launch { delay(1500); w.refresh() }
+            return
+        }
+        shieldPackage()?.let { apps.launch(it) }
+        say("請在神盾畫面裡按「離開」關閉它")
     }
 
     fun shieldPackage(): String? =

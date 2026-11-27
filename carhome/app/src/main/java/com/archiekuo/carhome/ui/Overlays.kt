@@ -104,6 +104,8 @@ data class SettingsModel(
     val shieldLeft: Boolean = false,
     val memText: String = "",
     val ytWin: String = "",
+    val notifyOk: Boolean = false,
+    val shieldButtons: String = "",
 )
 
 @Composable
@@ -114,17 +116,16 @@ fun SettingsPanel(
     onHideStatus: (Boolean) -> Unit, onBlack: (Boolean) -> Unit = {}, onOverlay: () -> Unit, onPermissions: () -> Unit, onDefaultHome: () -> Unit, onResetTiles: () -> Unit,
     onShieldLeft: (Boolean) -> Unit = {}, onMemory: () -> Unit = {},
     onYtWin: () -> Unit = {},
+    onNotify: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     PanelFrame("車機桌面設定", onBack) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 120.dp)) {
             Group("發動車子後") {
                 SwitchRow("自動播網路收音機", "接著播上次的電台（會先等網路連上）", m.autoRadio, onAutoRadio)
-                SwitchRow("自動打開神盾", "預設關閉：要用時按下方「神盾」方塊自己打開（神盾說話會讓 YouTube 暫停）", m.autoShield, onAutoShield)
+                SwitchRow("自動打開神盾（在背景）", "預設關閉：要用時按下方「神盾」方塊（神盾說話會讓 YouTube 暫停）", m.autoShield, onAutoShield)
                 ActionRow("神盾 App", m.shieldLabel, onPickShield)
-            }
-            Group("YouTube") {
-                ActionRow("小窗開法（點一下切換）", m.ytWin, onYtWin)
+                ActionRow("讀取通知（看神盾開或關）", if (m.notifyOk) "已允許" + (if (m.shieldButtons.isNotBlank()) " ・ 神盾按鈕：${m.shieldButtons}" else "") else "尚未允許，點這裡開啟", onNotify)
             }
             Group("收音機") {
                 SwitchRow("沒網路時自動切 FM", "網路收音機斷網超過 10 秒，改開原廠 FM；網路恢復再切回來", m.autoFm, onAutoFm)
@@ -132,9 +133,7 @@ fun SettingsPanel(
             }
             Group("畫面") {
                 SwitchRow("全黑桌面", "關閉＝午夜藍加金色；打開＝全黑背景，晚上開車更不刺眼", m.black, onBlack)
-                SwitchRow("導航區和 YouTube 放左邊", "打開＝導航區、YouTube 在左邊（靠駕駛座），時鐘和天氣換到右邊", m.shieldLeft, onShieldLeft)
-                SwitchRow("跳動光條", if (m.vizReal) "下方彩虹光條跟著音樂跳動（已讀到聲音）" else "下方彩虹光條（讀不到聲音時會柔和起伏）", m.viz, onViz)
-                SwitchRow("光條流動跟著節奏", "快歌流得快，慢歌流得慢", m.vizTempo, onVizTempo)
+                SwitchRow("導航區放左邊", "打開＝導航區、行車資訊在左邊（靠駕駛座），時鐘和天氣換到右邊", m.shieldLeft, onShieldLeft)
                 SwitchRow("隱藏系統狀態列", "畫面更乾淨（日期和網路狀態桌面上都有）", m.hideStatus, onHideStatus)
                 ActionRow("下方方塊全部恢復預設", "恢復", onResetTiles)
             }
@@ -142,7 +141,7 @@ fun SettingsPanel(
                 ActionRow("記憶體與背景 App", m.memText.ifBlank { "查看" }, onMemory)
             }
             Group("權限與桌面") {
-                ActionRow("允許顯示在其他 App 上層", if (m.overlayOk) "已允許" else "尚未允許（自動開神盾需要）", onOverlay)
+                ActionRow("允許顯示在其他 App 上層", if (m.overlayOk) "已允許" else "尚未允許（神盾懸浮視窗需要）", onOverlay)
                 ActionRow("位置、錄音、音樂檔案權限", "重新詢問", onPermissions)
                 ActionRow("設為預設桌面", "打開系統設定", onDefaultHome)
             }

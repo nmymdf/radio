@@ -69,7 +69,7 @@ private fun StatusDot(color: Color, text: String, textColor: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(11.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(8.dp))
-        Text(text, fontSize = 19.sp, color = textColor, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 25.sp)
+        Text(text, fontSize = 22.sp, color = textColor, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 28.sp)
     }
 }
 
@@ -123,7 +123,7 @@ private fun ColumnScope.RadioBody(s: RadioState, onToggle: () -> Unit, onPrev: (
     Row(Modifier.clip(RoundedCornerShape(20.dp)).clickable(onClick = onOpenApp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Cover(art, R.drawable.art_radio)
         Column(Modifier.weight(1f)) {
-            Text(s.title ?: "網路收音機", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 38.sp)
+            Text(s.title ?: "網路收音機", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 40.sp)
             Spacer(Modifier.height(10.dp))
             when {
                 s.error && !s.playing -> StatusDot(C.Red, "連線不穩，重新連線中…", C.Red)
@@ -137,7 +137,7 @@ private fun ColumnScope.RadioBody(s: RadioState, onToggle: () -> Unit, onPrev: (
     Controls(s.playing || s.buffering, onPrev, onToggle, onNext)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         GhostButton("選電台", icon = Icons.Rounded.QueueMusic, modifier = Modifier.width(140.dp), onClick = onOpenApp)
-        Text(if (autoFm) "沒有網路時，自動切到 FM" else "沒網路自動切 FM：已關閉", fontSize = 17.sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(if (autoFm) "沒有網路時，自動切到 FM" else "沒網路自動切 FM：已關閉", fontSize = 20.sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
     }
 }
 
@@ -164,10 +164,10 @@ private fun ColumnScope.LocalBody(s: LocalState, onToggle: () -> Unit, onPrev: (
     Row(Modifier.clip(RoundedCornerShape(20.dp)).clickable(onClick = onPage), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Cover(art, R.drawable.art_cafe)
         Column(Modifier.weight(1f)) {
-            Text(s.title ?: "內部音樂", fontSize = 29.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 36.sp)
+            Text(s.title ?: "內部音樂", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 36.sp)
             Spacer(Modifier.height(8.dp))
-            Text(s.artist?.takeIf { it.isNotBlank() } ?: (if (s.scanned) "共 ${s.count} 首" else "按播放開始聽"), fontSize = 19.sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (s.scanned && s.count > 0 && s.title != null) Text("第 ${s.index + 1} 首 ・ 共 ${s.count} 首", fontSize = 17.sp, color = C.Sub, modifier = Modifier.padding(top = 4.dp))
+            Text(s.artist?.takeIf { it.isNotBlank() } ?: (if (s.scanned) "共 ${s.count} 首" else "按播放開始聽"), fontSize = 22.sp, color = C.Sub, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (s.scanned && s.count > 0 && s.title != null) Text("第 ${s.index + 1} 首 ・ 共 ${s.count} 首", fontSize = 20.sp, color = C.Sub, modifier = Modifier.padding(top = 4.dp))
         }
     }
     Controls(s.playing, onPrev, onToggle, onNext)

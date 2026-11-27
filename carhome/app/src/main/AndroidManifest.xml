@@ -77,5 +77,15 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+        <!-- 看神盾的通知，知道它開著還是關著 -->
+        <service
+            android:name=".shield.ShieldWatcher"
+            android:exported="true"
+            android:label="車機桌面（神盾開關狀態）"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
